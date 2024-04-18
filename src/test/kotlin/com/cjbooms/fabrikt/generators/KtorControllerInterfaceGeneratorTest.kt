@@ -53,9 +53,6 @@ class KtorControllerInterfaceGeneratorTest {
         ModelNameRegistry.clear()
     }
 
-    // @Test
-    // fun `debug single test`() = `correct models are generated for different OpenApi Specifications`("singleAllOf")
-
     @ParameterizedTest
     @MethodSource("testCases")
     fun `correct controllers are generated for different OpenApi Specifications`(testCaseName: String) {
