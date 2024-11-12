@@ -5,7 +5,9 @@ import com.cjbooms.fabrikt.generators.model.JacksonMetadata
 import com.cjbooms.fabrikt.model.SerializationAnnotations
 import com.cjbooms.fabrikt.model.JacksonAnnotations
 import com.cjbooms.fabrikt.model.KotlinTypeInfo
+import com.cjbooms.fabrikt.model.KotlinxSerializationAnnotations
 import com.cjbooms.fabrikt.model.PropertyInfo
+import com.squareup.kotlinpoet.ANY
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FunSpec
@@ -16,6 +18,7 @@ import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asTypeName
+import kotlinx.serialization.Contextual
 
 data class ClassSettings(
     val polymorphyType: PolymorphyType,
@@ -44,15 +47,23 @@ object PropertyUtils {
         validationAnnotations: ValidationAnnotations = JavaxValidationAnnotations,
         serializationAnnotations: SerializationAnnotations = JacksonAnnotations,
     ) {
-        val wrappedType =
-            if (classSettings.isMergePatchPattern && !this.isRequired) {
-                ClassName(
-                    "org.openapitools.jackson.nullable",
-                    "JsonNullable",
-                ).parameterizedBy(type.copy(nullable = this.schema.isNullable))
+        val wrappedType = if (classSettings.isMergePatchPattern && !this.isRequired) {
+            ClassName("org.openapitools.jackson.nullable", "JsonNullable")
+                .parameterizedBy(type.copy(nullable = this.schema.isNullable))
+        } else {
+            type
+        }.run {
+            if (this@addToClass.typeInfo is KotlinTypeInfo.UntypedObject && serializationAnnotations is KotlinxSerializationAnnotations) {
+                val contextualAnnotation = AnnotationSpec.builder(Contextual::class).build()
+                val annotatedAnyType = ANY.copy(nullable = true, annotations = listOf(contextualAnnotation))
+                ClassName("kotlin.collections", "Map").parameterizedBy(
+                    String::class.asTypeName(),
+                    annotatedAnyType
+                )
             } else {
-                type
+                this
             }
+        }
         val property = PropertySpec.builder(name, wrappedType)
 
         if (this is PropertyInfo.AdditionalProperties) {
