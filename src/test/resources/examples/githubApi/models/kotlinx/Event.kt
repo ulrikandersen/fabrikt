@@ -4,6 +4,7 @@ import javax.validation.constraints.NotNull
 import kotlin.Any
 import kotlin.String
 import kotlin.collections.Map
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -14,5 +15,5 @@ public data class Event(
   public val entityId: String,
   @SerialName("data")
   @get:NotNull
-  public val `data`: Map<String, Any?>,
+  public val `data`: Map<String, @Contextual Any?>,
 )

@@ -11,7 +11,7 @@ import com.example.controllers.RequiredController.Companion.requiredRoutes
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.http.HttpStatusCode
-import io.ktor.serialization.jackson.jackson
+import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.auth.*
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
@@ -218,7 +218,7 @@ class KtorAuthenticationTest {
         }
 
         install(ContentNegotiation) {
-            jackson()
+            json()
         }
 
         install(StatusPages)

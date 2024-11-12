@@ -9,6 +9,7 @@ sourceSets {
 
 plugins {
     id("org.jetbrains.kotlin.jvm") version "1.8.20" // Apply the Kotlin JVM plugin to add support for Kotlin.
+    kotlin("plugin.serialization") version "1.8.20"
 }
 
 java {
@@ -19,19 +20,18 @@ java {
 val jacksonVersion: String by rootProject.extra
 val junitVersion: String by rootProject.extra
 val ktorVersion: String by rootProject.extra
+val kotlinxSerializationVersion: String by rootProject.extra
+val kotlinxDateTimeVersion: String by rootProject.extra
 
 dependencies {
     implementation("jakarta.validation:jakarta.validation-api:3.0.2")
     implementation("javax.validation:validation-api:2.0.1.Final")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
-    implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
-    implementation("com.fasterxml.jackson.core:jackson-core:$jacksonVersion")
-    implementation("com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:$kotlinxDateTimeVersion")
 
     // ktor server
     implementation("io.ktor:ktor-server-content-negotiation-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
+    implementation("io.ktor:ktor-serialization-kotlinx-json-jvm:$ktorVersion")
     implementation("io.ktor:ktor-server-auth:$ktorVersion")
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
 
@@ -91,6 +91,7 @@ fun TaskContainer.createCodeGenerationTask(
         "--targets", "http_models",
         "--targets", "controllers",
         "--http-controller-target", "ktor",
+        "--serialization-library", "KOTLINX_SERIALIZATION",
     ) + opts
     dependsOn(":jar")
     dependsOn(":shadowJar")
