@@ -23,7 +23,6 @@ class InternalEventsControllerImpl(
                 listOf(
                     Event(
                         entityId = "entityId",
-                        properties = mutableMapOf(),
                         data = mapOf(
                             "dataKey" to 1,
                             "otherDataKey" to "value",
