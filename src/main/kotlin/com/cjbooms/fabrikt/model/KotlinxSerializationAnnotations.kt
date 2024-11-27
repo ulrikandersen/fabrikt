@@ -7,8 +7,11 @@ import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonClassDiscriminator
 
 object KotlinxSerializationAnnotations : SerializationAnnotations {
+    private const val DEFAULT_JSON_CLASS_DISCRIMINATOR = "type"
+
     /**
      * Supporting "additionalProperties: true" for kotlinx serialization requires additional
      * research and work due to Any type in the map (val properties: MutableMap<String, Any?>)
@@ -37,7 +40,11 @@ object KotlinxSerializationAnnotations : SerializationAnnotations {
         typeSpecBuilder.addAnnotation(AnnotationSpec.builder(Serializable::class).build())
 
     override fun addBasePolymorphicTypeAnnotation(typeSpecBuilder: TypeSpec.Builder, propertyName: String) =
-        typeSpecBuilder // not applicable
+        if (propertyName != DEFAULT_JSON_CLASS_DISCRIMINATOR) {
+            typeSpecBuilder.addAnnotation(
+                AnnotationSpec.builder(JsonClassDiscriminator::class).addMember("%S", propertyName).build()
+            )
+        } else typeSpecBuilder
 
     override fun addPolymorphicSubTypesAnnotation(typeSpecBuilder: TypeSpec.Builder, mappings: Map<String, TypeName>) =
         typeSpecBuilder // not applicable
