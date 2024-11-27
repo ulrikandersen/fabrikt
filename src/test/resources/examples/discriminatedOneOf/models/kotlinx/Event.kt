@@ -4,5 +4,5 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonClassDiscriminator
 
 @Serializable
-@JsonClassDiscriminator("status")
-public sealed interface State
+@JsonClassDiscriminator("eventType")
+public sealed interface Event

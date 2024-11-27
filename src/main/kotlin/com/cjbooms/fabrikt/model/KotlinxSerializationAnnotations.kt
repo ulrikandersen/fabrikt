@@ -7,8 +7,18 @@ import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonClassDiscriminator
 
 object KotlinxSerializationAnnotations : SerializationAnnotations {
+    private const val DEFAULT_JSON_CLASS_DISCRIMINATOR = "type"
+
+    /**
+     * Polymorphic class discriminators are added as annotations in kotlinx serialization.
+     * Including them in the class definition causes compilation errors since the property name
+     * will conflict with the class discriminator name.
+     */
+    override val supportsBackingPropertyForDiscriminator = false
+
     /**
      * Supporting "additionalProperties: true" for kotlinx serialization requires additional
      * research and work due to Any type in the map (val properties: MutableMap<String, Any?>)
@@ -18,6 +28,7 @@ object KotlinxSerializationAnnotations : SerializationAnnotations {
      * See also https://github.com/Kotlin/kotlinx.serialization/issues/1978
      */
     override val supportsAdditionalProperties = false
+
     override fun addIgnore(propertySpecBuilder: PropertySpec.Builder) =
         propertySpecBuilder // not applicable
 
@@ -37,7 +48,11 @@ object KotlinxSerializationAnnotations : SerializationAnnotations {
         typeSpecBuilder.addAnnotation(AnnotationSpec.builder(Serializable::class).build())
 
     override fun addBasePolymorphicTypeAnnotation(typeSpecBuilder: TypeSpec.Builder, propertyName: String) =
-        typeSpecBuilder // not applicable
+        if (propertyName != DEFAULT_JSON_CLASS_DISCRIMINATOR) {
+            typeSpecBuilder.addAnnotation(
+                AnnotationSpec.builder(JsonClassDiscriminator::class).addMember("%S", propertyName).build()
+            )
+        } else typeSpecBuilder
 
     override fun addPolymorphicSubTypesAnnotation(typeSpecBuilder: TypeSpec.Builder, mappings: Map<String, TypeName>) =
         typeSpecBuilder // not applicable
