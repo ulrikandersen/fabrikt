@@ -127,7 +127,9 @@ object PropertyUtils {
             if (isDiscriminatorFieldWithSingleKnownValue(classSettings, schemaName)) {
                 this as PropertyInfo.Field
                 if (classSettings.polymorphyType in listOf(ClassSettings.PolymorphyType.SUB, ClassSettings.PolymorphyType.ONE_OF)) {
-                    if (serializationAnnotations.requiresBackingPropertyForDiscriminator) {
+                    if (!serializationAnnotations.requiresBackingPropertyForDiscriminator) {
+                        return // Skip adding the property to the class
+                    } else {
                         property.initializer(name)
                         serializationAnnotations.addParameter(property, oasKey)
                         val constructorParameter: ParameterSpec.Builder = ParameterSpec.builder(name, wrappedType)
@@ -140,8 +142,6 @@ object PropertyUtils {
                                 constructorParameter.defaultValue("%S", discriminator.stringValue)
                         }
                         constructorBuilder.addParameter(constructorParameter.build())
-                    } else {
-                        return // Skip adding the property to the class
                     }
                 }
             } else {
