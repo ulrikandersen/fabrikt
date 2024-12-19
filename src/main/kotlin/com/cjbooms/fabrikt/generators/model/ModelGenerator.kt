@@ -499,53 +499,33 @@ class ModelGenerator(
 
         serializationAnnotations.addClassAnnotation(classBuilder)
 
-        // last resort: convert to object if class has no properties
-        return if (classBuilder.propertySpecs.isEmpty()) {
-            val classTypeSpec = classBuilder.build()
+        val classTypeSpec = classBuilder.build()
+
+        return if (classBuilder.propertySpecs.isNotEmpty()) {
+            classTypeSpec
+        } else {
+            // we have filtered out properties in generation process, and thus we need to convert to an object
             val objectBuilder = TypeSpec.objectBuilder(name)
-            // Copy annotations
-            for (annotation in classTypeSpec.annotations) {
-                objectBuilder.addAnnotation(annotation)
-            }
+                .addAnnotations(classTypeSpec.annotations)
+                .addModifiers(classTypeSpec.modifiers)
+                .superclass(classTypeSpec.superclass)
+                .addProperties(classTypeSpec.propertySpecs)
+                .addFunctions(classTypeSpec.funSpecs)
+                .addKdoc(classTypeSpec.kdoc)
 
-// Copy modifiers (note: some modifiers may not be relevant for objects)
-            for (modifier in classTypeSpec.modifiers) {
-                objectBuilder.addModifiers(modifier)
-            }
-
-// Copy superclass if applicable (Objects can have supertypes)
-            if (classTypeSpec.superclass != ANY) {
-                objectBuilder.superclass(classTypeSpec.superclass)
-            }
-
-// Copy superinterfaces
             for ((typeName, _) in classTypeSpec.superinterfaces) {
                 objectBuilder.addSuperinterface(typeName)
             }
 
-// Copy properties
-            objectBuilder.addProperties(classTypeSpec.propertySpecs)
-
-// Copy functions
-            objectBuilder.addFunctions(classTypeSpec.funSpecs)
-
-// Copy initializer block, if any
             if (classTypeSpec.initializerBlock.isNotEmpty()) {
                 objectBuilder.addInitializerBlock(classTypeSpec.initializerBlock)
             }
 
-// Copy nested types. If there's a companion object, it will appear here as a nested type.
-            for (nestedType in classTypeSpec.typeSpecs) {
+            for (nestedType in classTypeSpec.typeSpecs) { // e.g. companion object
                 objectBuilder.addType(nestedType)
             }
 
-// Copy KDoc
-            if (classTypeSpec.kdoc.isNotEmpty()) {
-                objectBuilder.addKdoc(classTypeSpec.kdoc)
-            }
             objectBuilder.build()
-        } else {
-            classBuilder.build()
         }
     }
 
