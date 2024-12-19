@@ -6,6 +6,7 @@ import com.cjbooms.fabrikt.cli.ModelCodeGenOptionType.SEALED_INTERFACES_FOR_ONE_
 import com.cjbooms.fabrikt.configurations.Packages
 import com.cjbooms.fabrikt.generators.ClassSettings
 import com.cjbooms.fabrikt.generators.GeneratorUtils.toClassName
+import com.cjbooms.fabrikt.generators.GeneratorUtils.toObjectTypeSpec
 import com.cjbooms.fabrikt.generators.MutableSettings
 import com.cjbooms.fabrikt.generators.PropertyUtils.addToClass
 import com.cjbooms.fabrikt.generators.PropertyUtils.isNullable
@@ -54,7 +55,6 @@ import com.reprezen.kaizen.oasparser.OpenApi3Parser
 import com.reprezen.kaizen.oasparser.model3.Discriminator
 import com.reprezen.kaizen.oasparser.model3.OpenApi3
 import com.reprezen.kaizen.oasparser.model3.Schema
-import com.squareup.kotlinpoet.ANY
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
@@ -504,28 +504,8 @@ class ModelGenerator(
         return if (classBuilder.propertySpecs.isNotEmpty()) {
             classTypeSpec
         } else {
-            // we have filtered out properties in generation process, and thus we need to convert to an object
-            val objectBuilder = TypeSpec.objectBuilder(name)
-                .addAnnotations(classTypeSpec.annotations)
-                .addModifiers(classTypeSpec.modifiers)
-                .superclass(classTypeSpec.superclass)
-                .addProperties(classTypeSpec.propertySpecs)
-                .addFunctions(classTypeSpec.funSpecs)
-                .addKdoc(classTypeSpec.kdoc)
-
-            for ((typeName, _) in classTypeSpec.superinterfaces) {
-                objectBuilder.addSuperinterface(typeName)
-            }
-
-            if (classTypeSpec.initializerBlock.isNotEmpty()) {
-                objectBuilder.addInitializerBlock(classTypeSpec.initializerBlock)
-            }
-
-            for (nestedType in classTypeSpec.typeSpecs) { // e.g. companion object
-                objectBuilder.addType(nestedType)
-            }
-
-            objectBuilder.build()
+            // properties have been filtered out in generation process so return an object instead
+            classTypeSpec.toObjectTypeSpec()
         }
     }
 
