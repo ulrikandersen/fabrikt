@@ -7,6 +7,11 @@ import com.squareup.kotlinpoet.TypeSpec
 
 sealed interface SerializationAnnotations {
     /**
+     * Whether to include backing property for a polymorphic discriminator
+     */
+    val requiresBackingPropertyForDiscriminator: Boolean
+
+    /**
      * Whether the annotation supports OpenAPI's additional properties
      * https://spec.openapis.org/oas/v3.0.0.html#model-with-map-dictionary-properties
      */

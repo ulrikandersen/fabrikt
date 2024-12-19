@@ -55,5 +55,11 @@ components:
           scroll: '#/components/schemas/ScrollEvent'
     ClickEvent:
       type: object
+      properties:
+        eventType:
+          type: string
     ScrollEvent:
       type: object
+      properties:
+        eventType:
+          type: string

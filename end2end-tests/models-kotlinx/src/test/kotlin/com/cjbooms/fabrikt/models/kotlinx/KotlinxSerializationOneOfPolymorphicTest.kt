@@ -128,7 +128,7 @@ class KotlinxSerializationOneOfPolymorphicTest {
 
         @Test
         fun `must serialize State with type info`() {
-            val module: State = StateA()
+            val module: State = StateA
             val json = kotlinx.serialization.json.Json.encodeToString(module)
 
             // Note that "moduleType" is added because we are serializing a subtype of Module
@@ -146,7 +146,7 @@ class KotlinxSerializationOneOfPolymorphicTest {
                 {"status":"a"}
             """.trimIndent()
             val state: State = kotlinx.serialization.json.Json.decodeFromString(json)
-            assertThat(state).isEqualTo(StateA())
+            assertThat(state).isEqualTo(StateA)
         }
     }
 }

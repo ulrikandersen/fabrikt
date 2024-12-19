@@ -72,9 +72,12 @@ components:
     LandlinePhone:
       type: object
       required:
+        - type
         - number
         - area_code
       properties:
+        type:
+          type: string
         number:
           type: string
         area_code:
@@ -82,8 +85,11 @@ components:
     MobilePhone:
       type: object
       required:
+        - type
         - number
       properties:
+        type:
+          type: string
         number:
           type: string
     # Polymorphic type with moduleType as discriminator
@@ -98,8 +104,18 @@ components:
           b: '#/components/schemas/ModuleB'
     ModuleA:
       type: object
+      required:
+          - moduleType
+      properties:
+        moduleType:
+          type: string
     ModuleB:
       type: object
+      required:
+        - moduleType
+      properties:
+        moduleType:
+          type: string
     # Polymorphic type with enum as discriminator
     State:
       oneOf:

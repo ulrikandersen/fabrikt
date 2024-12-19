@@ -13,6 +13,13 @@ object KotlinxSerializationAnnotations : SerializationAnnotations {
     private const val DEFAULT_JSON_CLASS_DISCRIMINATOR = "type"
 
     /**
+     * Polymorphic class discriminators are added as annotations in kotlinx serialization.
+     * Including them in the class definition causes compilation errors since the property name
+     * will conflict with the class discriminator name.
+     */
+    override val requiresBackingPropertyForDiscriminator = false
+
+    /**
      * Supporting "additionalProperties: true" for kotlinx serialization requires additional
      * research and work due to Any type in the map (val properties: MutableMap<String, Any?>)
      *
@@ -21,6 +28,7 @@ object KotlinxSerializationAnnotations : SerializationAnnotations {
      * See also https://github.com/Kotlin/kotlinx.serialization/issues/1978
      */
     override val supportsAdditionalProperties = false
+
     override fun addIgnore(propertySpecBuilder: PropertySpec.Builder) =
         propertySpecBuilder // not applicable
 

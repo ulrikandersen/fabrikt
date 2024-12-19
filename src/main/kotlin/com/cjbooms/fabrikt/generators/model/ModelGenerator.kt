@@ -54,6 +54,7 @@ import com.reprezen.kaizen.oasparser.OpenApi3Parser
 import com.reprezen.kaizen.oasparser.model3.Discriminator
 import com.reprezen.kaizen.oasparser.model3.OpenApi3
 import com.reprezen.kaizen.oasparser.model3.Schema
+import com.squareup.kotlinpoet.ANY
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
@@ -456,7 +457,7 @@ class ModelGenerator(
         oneOfInterfaces: Set<Schema>,
     ): TypeSpec {
         val name = generatedType(packages.base, modelName)
-        val generateObject = properties.isEmpty()
+        val generateObject = properties.isEmpty() // TODO: Would be great if we could filter out the discriminator property before this
         val builder =
             if (generateObject) {
                 TypeSpec.objectBuilder(name)
@@ -498,7 +499,54 @@ class ModelGenerator(
 
         serializationAnnotations.addClassAnnotation(classBuilder)
 
-        return classBuilder.build()
+        // last resort: convert to object if class has no properties
+        return if (classBuilder.propertySpecs.isEmpty()) {
+            val classTypeSpec = classBuilder.build()
+            val objectBuilder = TypeSpec.objectBuilder(name)
+            // Copy annotations
+            for (annotation in classTypeSpec.annotations) {
+                objectBuilder.addAnnotation(annotation)
+            }
+
+// Copy modifiers (note: some modifiers may not be relevant for objects)
+            for (modifier in classTypeSpec.modifiers) {
+                objectBuilder.addModifiers(modifier)
+            }
+
+// Copy superclass if applicable (Objects can have supertypes)
+            if (classTypeSpec.superclass != ANY) {
+                objectBuilder.superclass(classTypeSpec.superclass)
+            }
+
+// Copy superinterfaces
+            for ((typeName, _) in classTypeSpec.superinterfaces) {
+                objectBuilder.addSuperinterface(typeName)
+            }
+
+// Copy properties
+            objectBuilder.addProperties(classTypeSpec.propertySpecs)
+
+// Copy functions
+            objectBuilder.addFunctions(classTypeSpec.funSpecs)
+
+// Copy initializer block, if any
+            if (classTypeSpec.initializerBlock.isNotEmpty()) {
+                objectBuilder.addInitializerBlock(classTypeSpec.initializerBlock)
+            }
+
+// Copy nested types. If there's a companion object, it will appear here as a nested type.
+            for (nestedType in classTypeSpec.typeSpecs) {
+                objectBuilder.addType(nestedType)
+            }
+
+// Copy KDoc
+            if (classTypeSpec.kdoc.isNotEmpty()) {
+                objectBuilder.addKdoc(classTypeSpec.kdoc)
+            }
+            objectBuilder.build()
+        } else {
+            classBuilder.build()
+        }
     }
 
     private fun polymorphicSuperSubType(
