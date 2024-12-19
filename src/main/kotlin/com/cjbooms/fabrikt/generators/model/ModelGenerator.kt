@@ -457,7 +457,7 @@ class ModelGenerator(
         oneOfInterfaces: Set<Schema>,
     ): TypeSpec {
         val name = generatedType(packages.base, modelName)
-        val generateObject = properties.isEmpty() // TODO: Would be great if we could filter out the discriminator property before this
+        val generateObject = properties.isEmpty()
         val builder =
             if (generateObject) {
                 TypeSpec.objectBuilder(name)
