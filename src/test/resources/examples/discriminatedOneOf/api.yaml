@@ -44,3 +44,22 @@ components:
           enum:
             - mode1
             - mode2
+    Event:
+      oneOf:
+        - $ref: "#/components/schemas/ClickEvent"
+        - $ref: "#/components/schemas/ScrollEvent"
+      discriminator:
+        propertyName: eventType
+        mapping:
+          click: '#/components/schemas/ClickEvent'
+          scroll: '#/components/schemas/ScrollEvent'
+    ClickEvent:
+      type: object
+      properties:
+        eventType:
+          type: string
+    ScrollEvent:
+      type: object
+      properties:
+        eventType:
+          type: string

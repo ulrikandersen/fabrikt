@@ -3,6 +3,6 @@ package examples.discriminatedOneOf.models
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-@SerialName("a")
+@SerialName("scroll")
 @Serializable
-public object StateA : State
+public object ScrollEvent : Event
