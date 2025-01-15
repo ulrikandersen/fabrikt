@@ -21,6 +21,7 @@ import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.PropertySpec
+import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asTypeName
 import java.util.function.Predicate
@@ -162,6 +163,7 @@ object GeneratorUtils {
         basePackage: String,
         pathParameters: List<Parameter>,
         extraParameters: List<IncomingParameter>,
+        avoidNameClashes: Boolean = true,
     ): List<IncomingParameter> {
 
         val bodies = requestBody.contentMediaTypes.values
@@ -185,11 +187,20 @@ object GeneratorUtils {
             }
             .sortedBy { it.type.isNullable }
 
-        return detectAndAvoidNameClashes(bodies + parameters + extraParameters)
+        val allParameters = bodies + parameters + extraParameters
+
+        return if (avoidNameClashes) {
+            detectAndAvoidNameClashes(allParameters)
+        } else {
+            allParameters
+        }
     }
 
+    fun List<IncomingParameter>.hasNameClashes(): Boolean =
+        map { it.name }.toSet().size != size
+
     private fun detectAndAvoidNameClashes(parameters: List<IncomingParameter>): List<IncomingParameter> {
-        if (parameters.map { it.name }.toSet().size == parameters.size) {
+        if (!parameters.hasNameClashes()) {
             return parameters
         }
 
@@ -217,6 +228,7 @@ object GeneratorUtils {
             }
         }
     }
+
 
     private fun isNullable(parameter: Parameter): Boolean = !parameter.isRequired && parameter.schema.default == null
 
@@ -248,4 +260,6 @@ object GeneratorUtils {
 
         return objectBuilder.build()
     }
+
+    fun TypeName.isUnit(): Boolean = this == Unit::class.asTypeName()
 }

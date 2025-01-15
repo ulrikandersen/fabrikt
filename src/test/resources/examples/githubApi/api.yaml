@@ -860,7 +860,6 @@ components:
   schemas:
     BulkEntityDetails:
       type: object
-      additionalProperties: true
       required:
         - entities
       properties:
@@ -871,7 +870,6 @@ components:
 
     EntityDetails:
       type: object
-      additionalProperties: true
       description: |
         Describes the SQL entity we are requesting events for.
       required:
@@ -884,7 +882,6 @@ components:
 
     EventResults:
       type: object
-      additionalProperties: true
       required:
         - change_events
       properties:
@@ -896,7 +893,6 @@ components:
 
     Event:
       type: object
-      additionalProperties: true
       required:
         - entity_id
         - data
@@ -907,6 +903,10 @@ components:
         data:
           type: object
           description: This unstructured event content must conform to the Nakadi Event Type's schema
+          properties:
+            some:
+                type: string
+                description: Some data
 
     PaginationLink:
       type: string

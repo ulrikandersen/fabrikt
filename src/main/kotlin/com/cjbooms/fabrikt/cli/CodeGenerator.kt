@@ -11,6 +11,7 @@ import com.cjbooms.fabrikt.generators.client.OpenFeignInterfaceGenerator
 import com.cjbooms.fabrikt.generators.controller.KtorControllerInterfaceGenerator
 import com.cjbooms.fabrikt.generators.controller.MicronautControllerInterfaceGenerator
 import com.cjbooms.fabrikt.generators.controller.SpringControllerInterfaceGenerator
+import com.cjbooms.fabrikt.generators.controller.KtorRoutingResourcesGenerator
 import com.cjbooms.fabrikt.generators.model.ModelGenerator
 import com.cjbooms.fabrikt.generators.model.QuarkusReflectionModelGenerator
 import com.cjbooms.fabrikt.model.GeneratedFile
@@ -48,6 +49,7 @@ class CodeGenerator(
         val clientGenerator = when (MutableSettings.clientTarget()) {
             ClientCodeGenTargetType.OK_HTTP -> OkHttpClientGenerator(packages, sourceApi, srcPath)
             ClientCodeGenTargetType.OPEN_FEIGN -> OpenFeignInterfaceGenerator(packages, sourceApi)
+            ClientCodeGenTargetType.KTOR_ROUTING -> KtorRoutingResourcesGenerator(packages, sourceApi)
         }
         val options = MutableSettings.clientOptions()
         val clientFiles = clientGenerator.generate(options).files

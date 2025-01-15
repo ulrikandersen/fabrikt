@@ -164,29 +164,29 @@ class OkHttpClientGeneratorTest {
         assertThat(simpleClientCode).isEqualTo(expectedClient)
         assertThat(enhancedClientCode).isEqualTo(expectedClientCode)
     }
+}
 
-    private fun Collection<ClientType>.toSingleFile(): String {
-        val destPackage = if (this.isNotEmpty()) first().destinationPackage else ""
-        val singleFileBuilder = FileSpec.builder(destPackage, "dummyFilename")
-        this.forEach {
+fun Collection<ClientType>.toSingleFile(): String { // TODO: Move to utils
+    val destPackage = if (this.isNotEmpty()) first().destinationPackage else ""
+    val singleFileBuilder = FileSpec.builder(destPackage, "dummyFilename")
+    this.forEach {
+        val builder = singleFileBuilder
+            .addType(it.spec)
+            .addImport(JacksonMetadata.TYPE_REFERENCE_IMPORT.first, JacksonMetadata.TYPE_REFERENCE_IMPORT.second)
+        builder.build()
+    }
+    return Linter.lintString(singleFileBuilder.build().toString())
+}
+
+fun Models.toSingleFile(): String { // TODO: Move to utils
+    val destPackage = if (models.isNotEmpty()) models.first().destinationPackage else ""
+    val singleFileBuilder = FileSpec.builder(destPackage, "dummyFilename")
+    models
+        .sortedBy { it.spec.name }
+        .forEach {
             val builder = singleFileBuilder
                 .addType(it.spec)
-                .addImport(JacksonMetadata.TYPE_REFERENCE_IMPORT.first, JacksonMetadata.TYPE_REFERENCE_IMPORT.second)
             builder.build()
         }
-        return Linter.lintString(singleFileBuilder.build().toString())
-    }
-
-    private fun Models.toSingleFile(): String {
-        val destPackage = if (models.isNotEmpty()) models.first().destinationPackage else ""
-        val singleFileBuilder = FileSpec.builder(destPackage, "dummyFilename")
-        models
-            .sortedBy { it.spec.name }
-            .forEach {
-                val builder = singleFileBuilder
-                    .addType(it.spec)
-                builder.build()
-            }
-        return Linter.lintString(singleFileBuilder.build().toString())
-    }
+    return Linter.lintString(singleFileBuilder.build().toString())
 }

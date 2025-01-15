@@ -1,7 +1,10 @@
 package com.cjbooms.fabrikt.model
 
+import com.cjbooms.fabrikt.cli.ClientCodeGenTargetType
 import com.cjbooms.fabrikt.cli.CodeGenTypeOverride
 import com.cjbooms.fabrikt.cli.CodeGenerationType
+import com.cjbooms.fabrikt.cli.ControllerCodeGenTargetType
+import com.cjbooms.fabrikt.cli.ControllerCodeGenTargetType.*
 import com.cjbooms.fabrikt.cli.SerializationLibrary.KOTLINX_SERIALIZATION
 import com.cjbooms.fabrikt.generators.MutableSettings
 import com.cjbooms.fabrikt.model.OasType.Companion.toOasType
@@ -67,34 +70,40 @@ sealed class KotlinTypeInfo(val modelKClass: KClass<*>, val generatedModelClassN
 
     companion object {
         private val logger = Logger.getGlobal()
-        
-        fun from(schema: Schema, oasKey: String = "", enclosingSchema: EnclosingSchemaInfo? = null): KotlinTypeInfo =
-            when (schema.toOasType(oasKey)) {
+
+        fun from(schema: Schema, oasKey: String = "", enclosingSchema: EnclosingSchemaInfo? = null): KotlinTypeInfo {
+            val useNativeTypes = MutableSettings.serializationLibrary() == KOTLINX_SERIALIZATION || MutableSettings.clientTarget() == ClientCodeGenTargetType.KTOR_ROUTING
+
+            return when (schema.toOasType(oasKey)) {
                 OasType.Date -> {
-                    if (MutableSettings.serializationLibrary() == KOTLINX_SERIALIZATION) KotlinxLocalDate
+                    if (useNativeTypes) KotlinxLocalDate
                     else Date
                 }
+
                 OasType.DateTime -> {
-                    if (MutableSettings.serializationLibrary() == KOTLINX_SERIALIZATION) KotlinxInstant
+                    if (useNativeTypes) KotlinxInstant
                     else getOverridableDateTimeType()
                 }
+
                 OasType.Text -> Text
                 OasType.Enum ->
                     Enum(schema.getEnumValues(), ModelNameRegistry.getOrRegister(schema, enclosingSchema))
 
                 OasType.Uuid -> {
-                    if (MutableSettings.serializationLibrary() == KOTLINX_SERIALIZATION) Text // could possibly be Kotlin native UUID once that becomes stable
+                    if (useNativeTypes) Text // could possibly be Kotlin native UUID once that becomes stable
                     else Uuid
                 }
+
                 OasType.Uri -> {
-                    if (MutableSettings.serializationLibrary() == KOTLINX_SERIALIZATION) Text // no native URI in kotlin and thus not in kotlinx.serialization either
+                    if (useNativeTypes) Text // no native URI in kotlin and thus not in kotlinx.serialization either
                     else Uri
                 }
+
                 OasType.Base64String -> ByteArray
                 OasType.Binary -> getOverridableByteArray()
                 OasType.Double -> Double
                 OasType.Float -> Float
-                OasType.Number -> Numeric
+                OasType.Number -> if (useNativeTypes) Double else Numeric
                 OasType.Int32 -> Integer
                 OasType.Int64 -> BigInt
                 OasType.Integer -> Integer
@@ -128,6 +137,7 @@ sealed class KotlinTypeInfo(val modelKClass: KClass<*>, val generatedModelClassN
                         AnyType
                     }
             }
+        }
 
         private fun getOverridableDateTimeType(): KotlinTypeInfo {
             val typeOverrides = MutableSettings.typeOverrides()
