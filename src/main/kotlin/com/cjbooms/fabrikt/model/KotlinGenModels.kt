@@ -1,5 +1,7 @@
 package com.cjbooms.fabrikt.model
 
+import com.cjbooms.fabrikt.cli.ClientCodeGenTargetType
+import com.cjbooms.fabrikt.generators.MutableSettings
 import com.cjbooms.fabrikt.generators.model.JacksonMetadata
 import com.cjbooms.fabrikt.model.Destinations.clientPackage
 import com.cjbooms.fabrikt.model.Destinations.controllersPackage
@@ -48,10 +50,15 @@ data class Models(val models: Collection<ModelType>) : KotlinTypes(models) {
 }
 
 data class Clients(val clients: Collection<ClientType>) : KotlinTypes(clients) {
-    override val files: Collection<FileSpec> = super.files.map {
-        it.toBuilder()
-            .addImport(JacksonMetadata.TYPE_REFERENCE_IMPORT.first, JacksonMetadata.TYPE_REFERENCE_IMPORT.second)
-            .build()
+    override val files: Collection<FileSpec> = super.files.map { spec ->
+        spec.toBuilder().let {
+                // TODO: This is a hack - we should be able to add this logic to the specific generator
+                if (MutableSettings.clientTarget() == ClientCodeGenTargetType.KTOR_ROUTING) {
+                    it
+                } else {
+                    it.addImport(JacksonMetadata.TYPE_REFERENCE_IMPORT.first, JacksonMetadata.TYPE_REFERENCE_IMPORT.second)
+                }
+            }.build()
     }
 }
 
