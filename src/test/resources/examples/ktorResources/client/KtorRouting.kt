@@ -2,6 +2,7 @@ package examples.ktorResources.client
 
 import examples.ktorResources.models.SortOrder
 import io.ktor.resources.Resource
+import kotlin.Double
 import kotlin.Int
 import kotlin.String
 
@@ -13,11 +14,13 @@ import kotlin.String
  *
  * @param limit Maximum number of items to return
  * @param category Filter items by category
+ * @param priceLimit Maximum price of items to return
  */
 @Resource("/items")
 public class GetItems(
     public val limit: Int? = null,
     public val category: String? = null,
+    public val priceLimit: Double? = null,
 )
 
 /**
@@ -25,8 +28,6 @@ public class GetItems(
  *
  * A successful request returns an HTTP 201 response with [examples.ktorResources.models.Item] in
  * the response body.
- *
- * @param newItem
  */
 @Resource("/items")
 public class CreateItem()
@@ -34,7 +35,7 @@ public class CreateItem()
 /**
  * Retrieve a specific subitem of an item
  *
- * A successful request returns an HTTP 200 response with [examples.ktorResources.models.SubItem] in
+ * A successful request returns an HTTP 200 response with [examples.ktorResources.models.Item] in
  * the response body.
  *
  * @param itemId The ID of the item
@@ -66,12 +67,18 @@ public class SearchCatalogItems(
 )
 
 /**
- * Check the health of the system
+ * Check item availability
  *
  * A successful request returns an HTTP 204 response with an empty body.
+ *
+ * @param catalogId The ID of the catalog
+ * @param itemId The ID of the item
  */
-@Resource("/health")
-public class HealthGet()
+@Resource("/catalogs/{catalogId}/items/{itemId}/availability")
+public class CatalogsItemsAvailabilityGetByCatalogIdAndItemId(
+    public val catalogId: String,
+    public val itemId: String,
+)
 
 /**
  * Get the uptime of the system

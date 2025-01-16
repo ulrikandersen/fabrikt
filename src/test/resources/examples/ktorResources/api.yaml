@@ -23,6 +23,12 @@ paths:
           schema:
             type: integer
             default: 10
+        - name: priceLimit
+          in: query
+          description: Maximum price of items to return
+          required: false
+          schema:
+            type: number
       responses:
         '200':
           description: A list of items
@@ -35,12 +41,6 @@ paths:
     post:
       summary: Create a new item
       operationId: createItem
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/NewItem'
       responses:
         '201':
           description: Item created successfully
@@ -72,7 +72,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SubItem'
+                $ref: '#/components/schemas/Item'
         '404':
           description: Subitem not found
 
@@ -163,38 +163,6 @@ components:
       properties:
         id:
           type: string
-        name:
-          type: string
-        description:
-          type: string
-        price:
-          type: number
-    SubItem:
-      type: object
-      properties:
-        id:
-          type: string
-        parentItemId:
-          type: string
-        name:
-          type: string
-        description:
-          type: string
-    NewItem:
-      type: object
-      required:
-        - name
-        - price
-      properties:
-        name:
-          type: string
-        description:
-          type: string
-        price:
-          type: number
-    UpdateItem:
-      type: object
-      properties:
         name:
           type: string
         description:

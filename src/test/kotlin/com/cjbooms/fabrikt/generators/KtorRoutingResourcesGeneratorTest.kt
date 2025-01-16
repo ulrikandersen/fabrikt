@@ -25,11 +25,6 @@ class KtorRoutingResourcesGeneratorTest {
     @Suppress("unused")
     private fun fullApiTestCases(): Stream<String> = Stream.of(
         "ktorResources",
-//        "multiMediaType",
-//        "okHttpClientPostWithoutRequestBody",
-//        "pathLevelParameters",
-//        "parameterNameClash",
-//        "byteArrayStream",
     )
 
     @BeforeEach
