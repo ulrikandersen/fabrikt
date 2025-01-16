@@ -23,31 +23,15 @@ val ktorVersion: String by rootProject.extra
 val kotlinxDateTimeVersion: String by rootProject.extra
 
 dependencies {
-    implementation("jakarta.validation:jakarta.validation-api:3.0.2")
-    implementation("javax.validation:validation-api:2.0.1.Final")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
-    implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
-    implementation("com.fasterxml.jackson.core:jackson-core:$jacksonVersion")
-    implementation("com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion")
-
     // ktor client
     implementation("io.ktor:ktor-client-core:$ktorVersion")
     implementation("io.ktor:ktor-client-cio:$ktorVersion")
     implementation("io.ktor:ktor-client-resources:$ktorVersion")
-    implementation("io.ktor:ktor-client-content-negotiation-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
 
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:$kotlinxDateTimeVersion")
 
     // ktor test
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
-    testImplementation("io.ktor:ktor-server-auth:$ktorVersion")
-    testImplementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
-    testImplementation("io.ktor:ktor-server-status-pages:$ktorVersion")
-    testImplementation("io.ktor:ktor-server-content-negotiation-jvm:$ktorVersion")
-    testImplementation("org.jetbrains.kotlin:kotlin-test:1.8.20")
-
     testImplementation("io.mockk:mockk:1.13.7")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
@@ -90,7 +74,8 @@ fun TaskContainer.createCodeGenerationTask(
         "--targets", "http_models",
         "--targets", "client",
         "--http-client-target", "ktor_routing",
-        "--serialization-library", "kotlinx_serialization"
+        "--serialization-library", "kotlinx_serialization",
+        "--validation-library", "no_validation"
     ) + opts
     dependsOn(":jar")
     dependsOn(":shadowJar")

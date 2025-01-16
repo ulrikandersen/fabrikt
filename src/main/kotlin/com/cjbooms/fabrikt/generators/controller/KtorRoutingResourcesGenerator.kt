@@ -11,11 +11,8 @@ import com.cjbooms.fabrikt.generators.client.ClientGenerator
 import com.cjbooms.fabrikt.generators.controller.ControllerGeneratorUtils.happyPathResponse
 import com.cjbooms.fabrikt.model.ClientType
 import com.cjbooms.fabrikt.model.Clients
-import com.cjbooms.fabrikt.model.ControllerType
 import com.cjbooms.fabrikt.model.GeneratedFile
 import com.cjbooms.fabrikt.model.IncomingParameter
-import com.cjbooms.fabrikt.model.KotlinTypes
-import com.cjbooms.fabrikt.model.PathParam
 import com.cjbooms.fabrikt.model.RequestParameter
 import com.cjbooms.fabrikt.model.SourceApi
 import com.cjbooms.fabrikt.util.KaizenParserExtensions.routeToPaths
@@ -23,7 +20,6 @@ import com.reprezen.kaizen.oasparser.model3.Operation
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
-import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.PropertySpec
@@ -47,13 +43,7 @@ class KtorRoutingResourcesGenerator(
 
                     val (pathParams, queryParams, _, _) = params.splitByType()
 
-                    val className = if (operation.operationId != null) {
-                        operation.operationId.replaceFirstChar { it.uppercase() }
-                    } else {
-                        resourceName + verb.replaceFirstChar { it.uppercase() } + if (pathParams.isNotEmpty()) "By" + pathParams.joinToString("And") { it -> it.name.replaceFirstChar { it.uppercase() } } else ""
-                    }
-
-                    val resourceClassBuilder = TypeSpec.classBuilder(className)
+                    val resourceClassBuilder = TypeSpec.classBuilder(resourceClassName(operation, resourceName, verb, pathParams))
                         .addAnnotation(AnnotationSpec.builder(ClassName("io.ktor.resources", "Resource"))
                             .addMember("%S", path.value.pathString).build())
 
@@ -103,6 +93,17 @@ class KtorRoutingResourcesGenerator(
         return emptyList()
     }
 
+    private fun resourceClassName(op: Operation, resourceName: String, verb: String, params: List<RequestParameter>) =
+        if (op.operationId != null) {
+            op.operationId.replaceFirstChar { it.uppercase() }
+        } else {
+            buildString {
+                append(resourceName)
+                append(verb.replaceFirstChar { it.uppercase() })
+                append(if (params.isNotEmpty()) "By" + params.joinToString("And") { it -> it.name.replaceFirstChar { it.uppercase() } } else "")
+            }
+        }
+
     private fun buildResourceKdoc(operation: Operation, parameters: List<IncomingParameter>): CodeBlock {
         val kDoc = CodeBlock.builder()
 
@@ -130,13 +131,5 @@ class KtorRoutingResourcesGenerator(
         }
 
         return kDoc.build()
-    }
-
-    data class KtorResources(
-        val resourceModels: Set<ControllerType>,
-    ) : KotlinTypes(resourceModels) {
-        override val files: Collection<FileSpec> = super.files.map { fileSpec ->
-            fileSpec.toBuilder().build()
-        }
     }
 }

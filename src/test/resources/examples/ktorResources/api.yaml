@@ -115,13 +115,26 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Item'
-  /health:
+  /catalogs/{catalogId}/items/{itemId}/availability:
     get:
-      summary: Check the health of the system
+      summary: Check item availability
       # operationId: healthCheck # No operation ID to test name generation
+      parameters:
+        - name: catalogId
+          in: path
+          description: The ID of the catalog
+          required: true
+          schema:
+            type: string
+        - name: itemId
+          in: path
+          description: The ID of the item
+          required: true
+          schema:
+              type: string
       responses:
         '204':
-          description: API is healthy
+          description: No content
   /uptime:
     get:
       summary: Get the uptime of the system
