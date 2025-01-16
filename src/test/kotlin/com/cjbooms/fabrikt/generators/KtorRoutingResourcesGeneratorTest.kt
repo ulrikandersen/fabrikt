@@ -2,6 +2,8 @@ package com.cjbooms.fabrikt.generators
 
 import com.cjbooms.fabrikt.cli.ClientCodeGenTargetType
 import com.cjbooms.fabrikt.cli.CodeGenerationType
+import com.cjbooms.fabrikt.cli.SerializationLibrary
+import com.cjbooms.fabrikt.cli.ValidationLibrary
 import com.cjbooms.fabrikt.configurations.Packages
 import com.cjbooms.fabrikt.generators.controller.KtorRoutingResourcesGenerator
 import com.cjbooms.fabrikt.generators.model.ModelGenerator
@@ -33,6 +35,8 @@ class KtorRoutingResourcesGeneratorTest {
         MutableSettings.updateSettings(
             genTypes = setOf(CodeGenerationType.CLIENT),
             clientTarget = ClientCodeGenTargetType.KTOR_ROUTING,
+            serializationLibrary = SerializationLibrary.KOTLINX_SERIALIZATION,
+            validationLibrary = ValidationLibrary.NO_VALIDATION,
         )
         ModelNameRegistry.clear()
     }

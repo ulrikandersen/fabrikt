@@ -1,35 +1,30 @@
 package examples.ktorResources.models
 
-import com.fasterxml.jackson.`annotation`.JsonProperty
-import com.fasterxml.jackson.`annotation`.JsonValue
-import javax.validation.constraints.NotNull
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import kotlin.Double
 import kotlin.String
 import kotlin.collections.Map
 
+@Serializable
 public data class Item(
-    @param:JsonProperty("id")
-    @get:JsonProperty("id")
-    @get:NotNull
+    @SerialName("id")
     public val id: String,
-    @param:JsonProperty("name")
-    @get:JsonProperty("name")
-    @get:NotNull
+    @SerialName("name")
     public val name: String,
-    @param:JsonProperty("description")
-    @get:JsonProperty("description")
+    @SerialName("description")
     public val description: String? = null,
-    @param:JsonProperty("price")
-    @get:JsonProperty("price")
-    @get:NotNull
+    @SerialName("price")
     public val price: Double,
 )
 
 public enum class SortOrder(
-    @JsonValue
     public val `value`: String,
 ) {
+    @SerialName("asc")
     ASC("asc"),
+
+    @SerialName("desc")
     DESC("desc"),
     ;
 
