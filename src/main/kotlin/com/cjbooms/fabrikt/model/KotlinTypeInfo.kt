@@ -75,24 +75,17 @@ sealed class KotlinTypeInfo(val modelKClass: KClass<*>, val generatedModelClassN
             val useNativeTypes = MutableSettings.serializationLibrary() == KOTLINX_SERIALIZATION || MutableSettings.clientTarget() == ClientCodeGenTargetType.KTOR_ROUTING
 
             return when (schema.toOasType(oasKey)) {
-                OasType.Date -> {
-                    if (useNativeTypes) KotlinxLocalDate
-                    else Date
-                }
+                OasType.Date -> if (useNativeTypes) KotlinxLocalDate else Date
 
-                OasType.DateTime -> {
-                    if (useNativeTypes) KotlinxInstant
-                    else getOverridableDateTimeType()
-                }
+                OasType.DateTime -> if (useNativeTypes) KotlinxInstant else getOverridableDateTimeType()
 
                 OasType.Text -> Text
                 OasType.Enum ->
                     Enum(schema.getEnumValues(), ModelNameRegistry.getOrRegister(schema, enclosingSchema))
 
-                OasType.Uuid -> {
+                OasType.Uuid ->
                     if (useNativeTypes) Text // could possibly be Kotlin native UUID once that becomes stable
                     else Uuid
-                }
 
                 OasType.Uri -> {
                     if (useNativeTypes) Text // no native URI in kotlin and thus not in kotlinx.serialization either
