@@ -3,6 +3,7 @@ package com.cjbooms.fabrikt.generators.controller
 import com.cjbooms.fabrikt.cli.ControllerCodeGenOptionType
 import com.cjbooms.fabrikt.configurations.Packages
 import com.cjbooms.fabrikt.generators.GeneratorUtils.isUnit
+import com.cjbooms.fabrikt.generators.GeneratorUtils.splitByType
 import com.cjbooms.fabrikt.generators.GeneratorUtils.toIncomingParameters
 import com.cjbooms.fabrikt.generators.GeneratorUtils.toKCodeName
 import com.cjbooms.fabrikt.generators.controller.ControllerGeneratorUtils.SecuritySupport
@@ -475,21 +476,3 @@ class KtorControllerInterfaceGenerator(
         }
     }
 }
-
-private fun List<IncomingParameter>.splitByType(): IncomingParametersByType {
-    val requestParams = this.filterIsInstance<RequestParameter>()
-
-    return IncomingParametersByType(
-        pathParams = requestParams.filter { it.parameterLocation is PathParam },
-        queryParams = requestParams.filter { it.parameterLocation is QueryParam },
-        headerParams = requestParams.filter { it.parameterLocation is HeaderParam },
-        bodyParams = this.filterIsInstance<BodyParameter>()
-    )
-}
-
-private data class IncomingParametersByType(
-    val pathParams: List<RequestParameter>,
-    val queryParams: List<RequestParameter>,
-    val headerParams: List<RequestParameter>,
-    val bodyParams: List<BodyParameter>,
-)

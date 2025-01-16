@@ -4,6 +4,7 @@ import com.cjbooms.fabrikt.cli.ClientCodeGenOptionType
 import com.cjbooms.fabrikt.configurations.Packages
 import com.cjbooms.fabrikt.generators.GeneratorUtils.hasNameClashes
 import com.cjbooms.fabrikt.generators.GeneratorUtils.isUnit
+import com.cjbooms.fabrikt.generators.GeneratorUtils.splitByType
 import com.cjbooms.fabrikt.generators.GeneratorUtils.toIncomingParameters
 import com.cjbooms.fabrikt.generators.GeneratorUtils.toKCodeName
 import com.cjbooms.fabrikt.generators.client.ClientGenerator
@@ -44,8 +45,7 @@ class KtorRoutingResourcesGenerator(
                         routing requires parameter names to be unique.
                     """.trimIndent().replace("\n", "") }
 
-                    val pathParams = params.filterIsInstance<RequestParameter>().filter { it.parameterLocation is PathParam} // TODO: Reuse fun from controller gen
-                    val queryParams = params.filterIsInstance<RequestParameter>().filter { it.parameterLocation !is PathParam}
+                    val (pathParams, queryParams, _, _) = params.splitByType()
 
                     val className = if (operation.operationId != null) {
                         operation.operationId.replaceFirstChar { it.uppercase() }

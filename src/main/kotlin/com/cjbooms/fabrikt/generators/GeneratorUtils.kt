@@ -2,8 +2,11 @@ package com.cjbooms.fabrikt.generators
 
 import com.cjbooms.fabrikt.generators.model.ModelGenerator.Companion.toModelType
 import com.cjbooms.fabrikt.model.BodyParameter
+import com.cjbooms.fabrikt.model.HeaderParam
 import com.cjbooms.fabrikt.model.IncomingParameter
 import com.cjbooms.fabrikt.model.KotlinTypeInfo
+import com.cjbooms.fabrikt.model.PathParam
+import com.cjbooms.fabrikt.model.QueryParam
 import com.cjbooms.fabrikt.model.RequestParameter
 import com.cjbooms.fabrikt.util.KaizenParserExtensions.safeName
 import com.cjbooms.fabrikt.util.NormalisedString.camelCase
@@ -229,6 +232,23 @@ object GeneratorUtils {
         }
     }
 
+    data class IncomingParametersByType(
+        val pathParams: List<RequestParameter>,
+        val queryParams: List<RequestParameter>,
+        val headerParams: List<RequestParameter>,
+        val bodyParams: List<BodyParameter>,
+    )
+
+    fun List<IncomingParameter>.splitByType(): IncomingParametersByType {
+        val requestParams = this.filterIsInstance<RequestParameter>()
+
+        return IncomingParametersByType(
+            pathParams = requestParams.filter { it.parameterLocation is PathParam },
+            queryParams = requestParams.filter { it.parameterLocation is QueryParam },
+            headerParams = requestParams.filter { it.parameterLocation is HeaderParam },
+            bodyParams = this.filterIsInstance<BodyParameter>()
+        )
+    }
 
     private fun isNullable(parameter: Parameter): Boolean = !parameter.isRequired && parameter.schema.default == null
 
