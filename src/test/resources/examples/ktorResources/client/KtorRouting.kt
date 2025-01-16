@@ -12,9 +12,10 @@ import kotlin.String
  * A successful request returns an HTTP 200 response with
  * [kotlin.collections.List<examples.ktorResources.models.Item>] in the response body.
  *
- * @param limit Maximum number of items to return
- * @param category Filter items by category
- * @param priceLimit Maximum price of items to return
+ * Request parameters:
+ * 	 @param limit Maximum number of items to return
+ * 	 @param category Filter items by category
+ * 	 @param priceLimit Maximum price of items to return
  */
 @Resource("/items")
 public class GetItems(
@@ -28,9 +29,23 @@ public class GetItems(
  *
  * A successful request returns an HTTP 201 response with [examples.ktorResources.models.Item] in
  * the response body.
+ *
+ * Request body:
+ * 	[examples.ktorResources.models.Item] The item to create
+ *
+ * Request headers:
+ * 	- "X-Request-ID" (required) Unique identifier for the request
+ * 	- "X-Tracing-ID" (optional) Unique identifier for the tracing
+ *
+ * Request parameters:
+ * 	 @param catalogId The ID of the catalog
+ * 	 @param randomNumber Just a test query param
  */
-@Resource("/items")
-public class CreateItem()
+@Resource("/catalogs/{catalogId}/items")
+public class CreateItem(
+    public val catalogId: String,
+    public val randomNumber: Int,
+)
 
 /**
  * Retrieve a specific subitem of an item
@@ -38,8 +53,9 @@ public class CreateItem()
  * A successful request returns an HTTP 200 response with [examples.ktorResources.models.Item] in
  * the response body.
  *
- * @param itemId The ID of the item
- * @param subItemId The ID of the subitem
+ * Request parameters:
+ * 	 @param itemId The ID of the item
+ * 	 @param subItemId The ID of the subitem
  */
 @Resource("/items/{itemId}/subitems/{subItemId}")
 public class GetSubItem(
@@ -53,10 +69,11 @@ public class GetSubItem(
  * A successful request returns an HTTP 200 response with
  * [kotlin.collections.List<examples.ktorResources.models.Item>] in the response body.
  *
- * @param catalogId The ID of the catalog
- * @param query The search query
- * @param page Page number
- * @param sort Sort order
+ * Request parameters:
+ * 	 @param catalogId The ID of the catalog
+ * 	 @param query The search query
+ * 	 @param page Page number
+ * 	 @param sort Sort order
  */
 @Resource("/catalogs/{catalogId}/search")
 public class SearchCatalogItems(
@@ -71,8 +88,9 @@ public class SearchCatalogItems(
  *
  * A successful request returns an HTTP 204 response with an empty body.
  *
- * @param catalogId The ID of the catalog
- * @param itemId The ID of the item
+ * Request parameters:
+ * 	 @param catalogId The ID of the catalog
+ * 	 @param itemId The ID of the item
  */
 @Resource("/catalogs/{catalogId}/items/{itemId}/availability")
 public class CatalogsItemsAvailabilityGetByCatalogIdAndItemId(

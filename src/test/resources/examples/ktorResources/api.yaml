@@ -38,9 +38,42 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Item'
+  /catalogs/{catalogId}/items:
     post:
       summary: Create a new item
       operationId: createItem
+      parameters:
+        - name: catalogId
+          in: path
+          description: The ID of the catalog
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          description: Unique identifier for the request
+          required: true
+          schema:
+            type: string
+        - name: X-Tracing-ID
+          in: header
+          description: Unique identifier for the tracing
+          required: false
+          schema:
+            type: string
+        - name: randomNumber
+          in: query
+          description: Just a test query param
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        description: The item to create
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Item'
       responses:
         '201':
           description: Item created successfully

@@ -126,8 +126,25 @@ class KtorRoutingResourcesGenerator(
         }
 
         // document parameters
-        parameters.forEach {
-            kDoc.add("@param %L %L\n", it.name.toKCodeName(), it.description?.trimIndent().orEmpty()).build()
+        val (pathParams, queryParams, headerParams, bodyParams) = parameters.splitByType()
+        if (bodyParams.isNotEmpty()) {
+            kDoc.add("Request body:\n")
+            bodyParams.forEach {
+                kDoc.add("\t[%L] %L\n\n", it.type, it.description?.trimIndent().orEmpty()).build()
+            }
+        }
+        if (headerParams.isNotEmpty()) {
+            kDoc.add("Request headers:\n")
+            headerParams.forEach {
+                kDoc.add("\t- \"%L\" (%L) %L\n", it.originalName, if (it.type.isNullable) "optional" else "required", it.description?.trimIndent().orEmpty()).build()
+            }
+            kDoc.add("\n")
+        }
+        if ((pathParams + queryParams).isNotEmpty()) {
+            kDoc.add("Request parameters:\n")
+            (pathParams + queryParams).forEach {
+                kDoc.add("\t @param %L %L\n", it.name.toKCodeName(), it.description?.trimIndent().orEmpty()).build()
+            }
         }
 
         return kDoc.build()
