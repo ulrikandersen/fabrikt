@@ -79,7 +79,7 @@ class KtorRoutingResourcesGenerator(
 
                     resourceClassBuilder.primaryConstructor(constructorBuilder.build())
 
-                    resourceClassBuilder.addKdoc(buildResourceKdoc(operation, params))
+                    resourceClassBuilder.addKdoc(buildResourceKdoc(operation, params, verb))
 
                     resourceClassBuilder.build()
                 }
@@ -104,7 +104,8 @@ class KtorRoutingResourcesGenerator(
             }
         }
 
-    private fun buildResourceKdoc(operation: Operation, parameters: List<IncomingParameter>): CodeBlock {
+    private fun buildResourceKdoc(operation: Operation, parameters: List<IncomingParameter>, verb: String): CodeBlock {
+        val (pathParams, queryParams, headerParams, bodyParams) = parameters.splitByType()
         val kDoc = CodeBlock.builder()
 
         // add summary and description
@@ -114,29 +115,33 @@ class KtorRoutingResourcesGenerator(
             kDoc.add("\n")
         }
 
-        // document the response
-        val happyPathResponse = operation.happyPathResponse(packages.base)
-        if (happyPathResponse.isUnit()) {
-            kDoc.add("A successful request returns an HTTP ${operation.responses.keys.first()} response with an empty body.\n\n")
-        } else {
-            kDoc.add(
-                "A successful request returns an HTTP ${operation.responses.keys.first()} response with [%L] in the response body.\n\n",
-                happyPathResponse.toString(),
-            )
-        }
+        // document method
+        kDoc.add("HTTP method: %L\n\n", verb.uppercase())
 
-        // document parameters
-        val (pathParams, queryParams, headerParams, bodyParams) = parameters.splitByType()
         if (bodyParams.isNotEmpty()) {
             kDoc.add("Request body:\n")
             bodyParams.forEach {
                 kDoc.add("\t[%L] %L\n\n", it.type, it.description?.trimIndent().orEmpty()).build()
             }
         }
+
+        // document the response
+        val happyPathResponse = operation.happyPathResponse(packages.base)
+        kDoc.add("Response:\n")
+        if (happyPathResponse.isUnit()) {
+            kDoc.add("\tA successful request returns an HTTP ${operation.responses.keys.first()} response with an empty body.\n\n")
+        } else {
+            kDoc.add(
+                "\tA successful request returns an HTTP ${operation.responses.keys.first()} response with [%L] in the response body.\n\n",
+                happyPathResponse.toString(),
+            )
+        }
+
+        // document parameters
         if (headerParams.isNotEmpty()) {
             kDoc.add("Request headers:\n")
             headerParams.forEach {
-                kDoc.add("\t- \"%L\" (%L) %L\n", it.originalName, if (it.type.isNullable) "optional" else "required", it.description?.trimIndent().orEmpty()).build()
+                kDoc.add("\t\"%L\" (%L) %L\n", it.originalName, if (it.isRequired) "required" else "optional", it.description?.trimIndent().orEmpty()).build()
             }
             kDoc.add("\n")
         }
