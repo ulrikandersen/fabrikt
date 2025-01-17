@@ -1,8 +1,11 @@
 package com.cjbooms.fabrikt.routing.ktor
 
+import com.example.client.CatalogsItemsAvailability
 import com.example.client.CatalogsItemsAvailabilityGetByCatalogIdAndItemId
+import com.example.client.CatalogsSearch
 import com.example.client.`Get_System-Uptime`
 import com.example.client.SearchCatalogItems
+import com.example.client.Uptime
 import com.example.models.SortOrder
 import io.ktor.client.plugins.resources.Resources
 import io.ktor.client.plugins.resources.get
@@ -16,6 +19,7 @@ import io.ktor.server.testing.testApplication
 import io.mockk.slot
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
+import javax.xml.catalog.Catalog
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -25,7 +29,7 @@ class KtorClientRoutingTest {
     fun `should generate URI with required params`() {
         val resFormat = ResourcesFormat()
 
-        val uri = href(resFormat, SearchCatalogItems("catalog-a", "query"))
+        val uri = href(resFormat, CatalogsSearch.SearchCatalogItems("catalog-a", "query"))
 
         assertEquals("/catalogs/catalog-a/search?query=query", uri)
     }
@@ -36,7 +40,7 @@ class KtorClientRoutingTest {
 
         val uri = href(
             resFormat,
-            SearchCatalogItems(
+            CatalogsSearch.SearchCatalogItems(
                 catalogId = "catalog-a",
                 query = "query",
                 page = 1,
@@ -79,7 +83,7 @@ class KtorClientRoutingTest {
             }
 
             val httpResponse = client.get(
-                SearchCatalogItems(
+                CatalogsSearch.SearchCatalogItems(
                     catalogId = "catalog-a",
                     query = "query",
                     page = 10,
@@ -99,7 +103,7 @@ class KtorClientRoutingTest {
     fun `resource name is generated correctly`() {
         val resFormat = ResourcesFormat()
 
-        val uri = href(resFormat, CatalogsItemsAvailabilityGetByCatalogIdAndItemId("catalog-a", "item-b"))
+        val uri = href(resFormat, CatalogsItemsAvailability.GetByCatalogIdAndItemId("catalog-a", "item-b"))
 
         assertEquals("/catalogs/catalog-a/items/item-b/availability", uri)
     }
@@ -108,7 +112,7 @@ class KtorClientRoutingTest {
     fun `operationId with underscore and dash works`() {
         val resFormat = ResourcesFormat()
 
-        val uri = href(resFormat, `Get_System-Uptime`())
+        val uri = href(resFormat, Uptime.`Get_System-Uptime`())
 
         assertEquals("/uptime", uri)
     }

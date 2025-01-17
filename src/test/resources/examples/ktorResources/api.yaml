@@ -168,6 +168,24 @@ paths:
       responses:
         '204':
           description: No content
+    put:
+        summary: Update item availability
+        parameters:
+          - name: catalogId
+            in: path
+            description: The ID of the catalog
+            required: true
+            schema:
+              type: string
+          - name: itemId
+            in: path
+            description: The ID of the item
+            required: true
+            schema:
+              type: string
+        responses:
+          '204':
+            description: No content
   /uptime:
     get:
       summary: Get the uptime of the system

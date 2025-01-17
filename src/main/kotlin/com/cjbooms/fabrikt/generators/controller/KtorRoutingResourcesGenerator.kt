@@ -30,22 +30,30 @@ class KtorRoutingResourcesGenerator(
     private val api: SourceApi,
 ) : ClientGenerator {
     override fun generate(options: Set<ClientCodeGenOptionType>): Clients {
-        val resources: List<TypeSpec> = api.openApi3.routeToPaths().flatMap { (resourceName, paths) ->
-            paths.flatMap { path ->
+        val resources: List<TypeSpec> = api.openApi3.routeToPaths().map { (resourceName, paths) ->
+            val resourceContainerBuilder = TypeSpec.objectBuilder(resourceName)
+
+            paths.forEach { path ->
                 path.value.operations.map { (verb, operation) ->
-                    val params = operation.toIncomingParameters(packages.base, path.value.parameters, emptyList(),
+                    val params = operation.toIncomingParameters(
+                        packages.base, path.value.parameters, emptyList(),
                         avoidNameClashes = false
                     )
-                    require(!params.hasNameClashes()) { """
+                    require(!params.hasNameClashes()) {
+                        """
                         Operation '${path.value.pathString} > ${verb}' has name clashes in parameters. Ktor type safe 
                         routing requires parameter names to be unique.
-                    """.trimIndent().replace("\n", "") }
+                    """.trimIndent().replace("\n", "")
+                    }
 
                     val (pathParams, queryParams, _, _) = params.splitByType()
 
-                    val resourceClassBuilder = TypeSpec.classBuilder(resourceClassName(operation, resourceName, verb, pathParams))
-                        .addAnnotation(AnnotationSpec.builder(ClassName("io.ktor.resources", "Resource"))
-                            .addMember("%S", path.value.pathString).build())
+                    val resourceClassBuilder =
+                        TypeSpec.classBuilder(resourceClassName(operation, verb, pathParams))
+                            .addAnnotation(
+                                AnnotationSpec.builder(ClassName("io.ktor.resources", "Resource"))
+                                    .addMember("%S", path.value.pathString).build()
+                            )
 
                     val constructorBuilder = FunSpec.constructorBuilder()
 
@@ -81,9 +89,11 @@ class KtorRoutingResourcesGenerator(
 
                     resourceClassBuilder.addKdoc(buildResourceKdoc(operation, params, verb))
 
-                    resourceClassBuilder.build()
+                    resourceContainerBuilder.addType(resourceClassBuilder.build())
                 }
             }
+
+            resourceContainerBuilder.build()
         }
 
         return Clients(resources.map { ClientType(it, packages.base) }.toSet())
@@ -93,12 +103,11 @@ class KtorRoutingResourcesGenerator(
         return emptyList()
     }
 
-    private fun resourceClassName(op: Operation, resourceName: String, verb: String, params: List<RequestParameter>) =
+    private fun resourceClassName(op: Operation, verb: String, params: List<RequestParameter>) =
         if (op.operationId != null) {
             op.operationId.replaceFirstChar { it.uppercase() }
         } else {
             buildString {
-                append(resourceName)
                 append(verb.replaceFirstChar { it.uppercase() })
                 append(if (params.isNotEmpty()) "By" + params.joinToString("And") { it -> it.name.replaceFirstChar { it.uppercase() } } else "")
             }
