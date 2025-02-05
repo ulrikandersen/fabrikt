@@ -17,12 +17,11 @@ import com.cjbooms.fabrikt.generators.TypeFactory.createMapOfStringToType
 import com.cjbooms.fabrikt.generators.TypeFactory.createMutableMapOfMapsStringToStringType
 import com.cjbooms.fabrikt.generators.TypeFactory.createMutableMapOfStringToType
 import com.cjbooms.fabrikt.generators.ValidationAnnotations
-import com.cjbooms.fabrikt.generators.model.JacksonMetadata.basePolymorphicType
-import com.cjbooms.fabrikt.generators.model.JacksonMetadata.polymorphicSubTypes
 import com.cjbooms.fabrikt.model.SerializationAnnotations
 import com.cjbooms.fabrikt.model.Destinations.modelsPackage
 import com.cjbooms.fabrikt.model.GeneratedType
 import com.cjbooms.fabrikt.model.KotlinTypeInfo
+import com.cjbooms.fabrikt.model.KotlinxSerializationAnnotations
 import com.cjbooms.fabrikt.model.ModelType
 import com.cjbooms.fabrikt.model.Models
 import com.cjbooms.fabrikt.model.PropertyInfo
@@ -488,12 +487,14 @@ class ModelGenerator(
                     schemaName = schemaName,
                     classBuilder = classBuilder,
                     classType = ClassSettings(ClassSettings.PolymorphyType.ONE_OF, extensions),
+                    modifiers = setOf(KModifier.ABSTRACT),
                 )
             } else {
                 properties.addToClass(
                     schemaName = schemaName,
                     classBuilder = classBuilder,
                     classType = ClassSettings(ClassSettings.PolymorphyType.NONE, extensions),
+                    modifiers = setOf(KModifier.ABSTRACT),
                 )
             }
         }
@@ -568,7 +569,7 @@ class ModelGenerator(
                 .mapValues { (_, value) ->
                     toModelType(packages.base, KotlinTypeInfo.from(value.schema, value.name))
                 }
-            serializationAnnotations.addPolymorphicSubTypesAnnotation(interfaceBuilder, mappings)
+            serializationAnnotations.addPolymorphicSubTypesAnnotation(interfaceBuilder, mappings, null)
         }
 
         for (oneOfSuperInterface in oneOfSuperInterfaces) {
@@ -614,8 +615,13 @@ class ModelGenerator(
         constructorBuilder: FunSpec.Builder = FunSpec.constructorBuilder(),
     ): TypeSpec.Builder {
         this.addModifiers(KModifier.SEALED)
-            .addAnnotation(basePolymorphicType(discriminator.propertyName))
             .modifiers.remove(KModifier.DATA)
+
+        if (serializationAnnotations == KotlinxSerializationAnnotations) {
+            this.addModifiers(KModifier.ABSTRACT)
+        }
+
+        serializationAnnotations.addBasePolymorphicTypeAnnotation(this, discriminator.propertyName)
 
         for (oneOfSuperInterface in oneOfSuperInterfaces) {
             this.addSuperinterface(generatedType(packages.base, oneOfSuperInterface.name))
@@ -640,8 +646,10 @@ class ModelGenerator(
         val maybeEnumDiscriminator = properties
             .firstOrNull { it.name == discriminator.propertyName }?.typeInfo as? KotlinTypeInfo.Enum
 
-        this.addAnnotation(polymorphicSubTypes(mappings, maybeEnumDiscriminator))
-            .addQuarkusReflectionAnnotation()
+        serializationAnnotations.addClassAnnotation(this)
+        serializationAnnotations.addPolymorphicSubTypesAnnotation(this, mappings, maybeEnumDiscriminator)
+
+        this.addQuarkusReflectionAnnotation()
             .addMicronautIntrospectedAnnotation()
             .addMicronautReflectionAnnotation()
 
@@ -650,6 +658,7 @@ class ModelGenerator(
             constructorBuilder,
             this,
             ClassSettings(ClassSettings.PolymorphyType.SUPER, extensions),
+ setOf(KModifier.ABSTRACT),
         )
 
         return this
@@ -697,11 +706,14 @@ class ModelGenerator(
             }
         } ?: allProperties
 
+        serializationAnnotations.addClassAnnotation(this)
+
         properties.addToClass(
             schemaName,
             constructorBuilder,
             this,
             ClassSettings(ClassSettings.PolymorphyType.SUB, extensions),
+            modifiers = setOf(KModifier.ABSTRACT),
         )
         return this
     }
@@ -711,6 +723,7 @@ class ModelGenerator(
         constructorBuilder: FunSpec.Builder = FunSpec.constructorBuilder(),
         classBuilder: TypeSpec.Builder,
         classType: ClassSettings,
+        modifiers: Set<KModifier>,
     ): TypeSpec.Builder {
         this.forEach {
             it.addToClass(
@@ -729,6 +742,7 @@ class ModelGenerator(
                 classSettings = classType,
                 validationAnnotations = validationAnnotations,
                 serializationAnnotations = serializationAnnotations,
+                modifiers = modifiers
             )
         }
         if (constructorBuilder.parameters.isNotEmpty() && classBuilder.modifiers.isEmpty()) {
