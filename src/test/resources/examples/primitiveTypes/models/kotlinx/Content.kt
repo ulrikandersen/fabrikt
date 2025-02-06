@@ -2,6 +2,7 @@ package examples.primitiveTypes.models
 
 import java.math.BigDecimal
 import kotlin.Boolean
+import kotlin.ByteArray
 import kotlin.Double
 import kotlin.Float
 import kotlin.Int
@@ -40,4 +41,8 @@ public data class Content(
   public val numberFloat: Float? = null,
   @SerialName("numberDouble")
   public val numberDouble: Double? = null,
+  @SerialName("base64")
+  public val base64: ByteArray? = null,
+  @SerialName("binary")
+  public val binary: ByteArray? = null,
 )
