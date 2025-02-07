@@ -8,6 +8,7 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
@@ -22,6 +23,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.math.BigDecimal
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 
 class KotlinxSerializationPrimitiveTypesTest {
 
@@ -78,6 +81,8 @@ class KotlinxSerializationPrimitiveTypesTest {
             number = BigDecimal("109288282772724.4225837838838383888"),
             numberFloat = 1.23f,
             numberDouble = 4.56,
+            base64 = "AQID",
+            binary = "BAUG"
         )
 
         val result = jsonWithCustomSerializers.encodeToString(content)
@@ -106,6 +111,8 @@ class KotlinxSerializationPrimitiveTypesTest {
             number = BigDecimal("109288282772724.4225837838838383888"),
             numberFloat = 1.23f,
             numberDouble = 4.56,
+            base64 = "AQID",
+            binary = "BAUG"
         )
 
         assertThat(content.integer).isEqualTo(expectedContent.integer)
@@ -120,6 +127,8 @@ class KotlinxSerializationPrimitiveTypesTest {
         assertThat(content.number).isEqualTo(expectedContent.number)
         assertThat(content.numberFloat).isEqualTo(expectedContent.numberFloat)
         assertThat(content.numberDouble).isEqualTo(expectedContent.numberDouble)
+        assertThat(content.base64.contentEquals(expectedContent.base64)).isTrue()
+        assertThat(content.binary.contentEquals(expectedContent.binary)).isTrue()
     }
 
     @Test
