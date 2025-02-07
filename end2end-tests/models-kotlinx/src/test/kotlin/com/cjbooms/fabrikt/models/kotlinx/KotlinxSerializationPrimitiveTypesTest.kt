@@ -8,6 +8,7 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
@@ -22,6 +23,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.math.BigDecimal
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 
 class KotlinxSerializationPrimitiveTypesTest {
 
@@ -55,10 +58,35 @@ class KotlinxSerializationPrimitiveTypesTest {
         }
     }
 
+    /**
+     * Custom serializer for [ByteArray] that serializes the value as a base64 string.
+     *
+     * https://github.com/Kotlin/kotlinx.serialization/blob/master/docs/json.md#base64
+     */
+    @OptIn(ExperimentalEncodingApi::class)
+    object Base64AsStringSerializer : KSerializer<ByteArray> {
+        private val base64 = Base64.Default
+
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor(
+            "ByteArrayAsBase64Serializer", PrimitiveKind.STRING
+        )
+
+        override fun serialize(encoder: Encoder, value: ByteArray) {
+            val base64Encoded = base64.encode(value)
+            encoder.encodeString(base64Encoded)
+        }
+
+        override fun deserialize(decoder: Decoder): ByteArray {
+            val base64Decoded = decoder.decodeString()
+            return base64.decode(base64Decoded)
+        }
+    }
+
     private val jsonWithCustomSerializers = Json {
         serializersModule = SerializersModule {
             // register contextual custom serializers
             contextual(BigDecimalSerializer)
+            contextual(Base64AsStringSerializer)
         }
         prettyPrint = true
     }
@@ -78,6 +106,8 @@ class KotlinxSerializationPrimitiveTypesTest {
             number = BigDecimal("109288282772724.4225837838838383888"),
             numberFloat = 1.23f,
             numberDouble = 4.56,
+            base64 = byteArrayOf(1, 2, 3),
+            binary = byteArrayOf(4, 5, 6)
         )
 
         val result = jsonWithCustomSerializers.encodeToString(content)
@@ -106,6 +136,8 @@ class KotlinxSerializationPrimitiveTypesTest {
             number = BigDecimal("109288282772724.4225837838838383888"),
             numberFloat = 1.23f,
             numberDouble = 4.56,
+            base64 = byteArrayOf(1, 2, 3),
+            binary = byteArrayOf(4, 5, 6)
         )
 
         assertThat(content.integer).isEqualTo(expectedContent.integer)
@@ -120,6 +152,8 @@ class KotlinxSerializationPrimitiveTypesTest {
         assertThat(content.number).isEqualTo(expectedContent.number)
         assertThat(content.numberFloat).isEqualTo(expectedContent.numberFloat)
         assertThat(content.numberDouble).isEqualTo(expectedContent.numberDouble)
+        assertThat(content.base64.contentEquals(expectedContent.base64)).isTrue()
+        assertThat(content.binary.contentEquals(expectedContent.binary)).isTrue()
     }
 
     @Test
