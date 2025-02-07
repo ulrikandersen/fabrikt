@@ -35,8 +35,8 @@ class PrimitiveTypesTest {
             number = BigDecimal("109288282772724.4225837838838383888"),
             numberFloat = 1.23f,
             numberDouble = 4.56,
-            base64 = byteArrayOf(1, 2, 3),
-            binary = byteArrayOf(4, 5, 6)
+            base64 = javaClass.getResource("/primitive_types/test.bin")!!.readBytes(),
+            binary = javaClass.getResource("/primitive_types/test.bin")!!.readBytes()
         )
 
         val result = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(content)
@@ -49,6 +49,7 @@ class PrimitiveTypesTest {
     @Test
     fun `must deserialize Content`() {
         val jsonString = javaClass.getResource("/primitive_types/content_valid.json")!!.readText()
+        val binFileContent = javaClass.getResource("/primitive_types/test.bin")!!.readBytes()
 
         val obj = objectMapper.readValue<Content>(jsonString)
 
@@ -65,8 +66,8 @@ class PrimitiveTypesTest {
             number = BigDecimal("109288282772724.4225837838838383888"),
             numberFloat = 1.23f,
             numberDouble = 4.56,
-            base64 = byteArrayOf(1, 2, 3),
-            binary = byteArrayOf(4, 5, 6)
+            base64 = binFileContent,
+            binary = binFileContent
         )
 
         assertThat(obj.integer).isEqualTo(expectedContent.integer)
@@ -81,7 +82,7 @@ class PrimitiveTypesTest {
         assertThat(obj.number).isEqualTo(expectedContent.number)
         assertThat(obj.numberFloat).isEqualTo(expectedContent.numberFloat)
         assertThat(obj.numberDouble).isEqualTo(expectedContent.numberDouble)
-        assertThat(obj.base64.contentEquals(expectedContent.base64)).isTrue()
-        assertThat(obj.binary.contentEquals(expectedContent.binary)).isTrue()
+        assertThat(obj.base64).isEqualTo(expectedContent.base64)
+        assertThat(obj.binary).isEqualTo(expectedContent.binary)
     }
 }
