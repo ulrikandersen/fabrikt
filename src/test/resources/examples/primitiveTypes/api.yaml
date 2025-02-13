@@ -38,7 +38,7 @@ components:
         numberDouble:
           type: number
           format: double
-        base64:
+        byte:
           type: string
           format: byte
         binary:

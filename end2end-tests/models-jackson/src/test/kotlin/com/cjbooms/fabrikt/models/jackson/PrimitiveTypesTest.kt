@@ -35,7 +35,7 @@ class PrimitiveTypesTest {
             number = BigDecimal("109288282772724.4225837838838383888"),
             numberFloat = 1.23f,
             numberDouble = 4.56,
-            base64 = javaClass.getResource("/primitive_types/test.bin")!!.readBytes(),
+            byte = javaClass.getResource("/primitive_types/test.bin")!!.readBytes(),
             binary = javaClass.getResource("/primitive_types/test.bin")!!.readBytes()
         )
 
@@ -66,7 +66,7 @@ class PrimitiveTypesTest {
             number = BigDecimal("109288282772724.4225837838838383888"),
             numberFloat = 1.23f,
             numberDouble = 4.56,
-            base64 = binFileContent,
+            byte = binFileContent,
             binary = binFileContent
         )
 
@@ -82,7 +82,7 @@ class PrimitiveTypesTest {
         assertThat(obj.number).isEqualTo(expectedContent.number)
         assertThat(obj.numberFloat).isEqualTo(expectedContent.numberFloat)
         assertThat(obj.numberDouble).isEqualTo(expectedContent.numberDouble)
-        assertThat(obj.base64).isEqualTo(expectedContent.base64)
+        assertThat(obj.byte).isEqualTo(expectedContent.byte)
         assertThat(obj.binary).isEqualTo(expectedContent.binary)
     }
 }

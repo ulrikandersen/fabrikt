@@ -51,9 +51,9 @@ public data class Content(
   @param:JsonProperty("numberDouble")
   @get:JsonProperty("numberDouble")
   public val numberDouble: Double? = null,
-  @param:JsonProperty("base64")
-  @get:JsonProperty("base64")
-  public val base64: ByteArray? = null,
+  @param:JsonProperty("byte")
+  @get:JsonProperty("byte")
+  public val byte: ByteArray? = null,
   @param:JsonProperty("binary")
   @get:JsonProperty("binary")
   public val binary: ByteArray? = null,
