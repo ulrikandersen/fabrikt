@@ -18,6 +18,7 @@ import com.cjbooms.fabrikt.model.KotlinTypeInfo
 import com.cjbooms.fabrikt.model.KotlinTypes
 import com.cjbooms.fabrikt.model.PathParam
 import com.cjbooms.fabrikt.model.QueryParam
+import com.cjbooms.fabrikt.model.MultipartParameter
 import com.cjbooms.fabrikt.model.RequestParameter
 import com.cjbooms.fabrikt.model.SourceApi
 import com.cjbooms.fabrikt.util.KaizenParserExtensions.isSingleResource
@@ -99,6 +100,13 @@ class SpringControllerInterfaceGenerator(
                         it
                             .toParameterSpecBuilder()
                             .addAnnotation(SpringAnnotations.requestBodyBuilder().build())
+                            .maybeAddAnnotation(validationAnnotations.parameterValid())
+                            .build()
+
+                    is MultipartParameter ->
+                        it
+                            .toParameterSpecBuilder()
+                            .addAnnotation(SpringAnnotations.requestPartBuilder(it.partName).build())
                             .maybeAddAnnotation(validationAnnotations.parameterValid())
                             .build()
 
