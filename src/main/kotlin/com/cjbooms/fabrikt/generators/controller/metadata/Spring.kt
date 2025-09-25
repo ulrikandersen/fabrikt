@@ -31,7 +31,6 @@ object SpringImports {
 
     val REQUEST_BODY = ClassName(Packages.WEB_BIND_ANNOTATION, "RequestBody")
 
-    val REQUEST_PART = ClassName(Packages.WEB_BIND_ANNOTATION, "RequestPart")
 
     val REQUEST_PARAM = ClassName(Packages.WEB_BIND_ANNOTATION, "RequestParam")
 
@@ -89,10 +88,6 @@ object SpringAnnotations {
         AnnotationSpec
             .builder(SpringImports.REQUEST_BODY)
 
-    fun requestPartBuilder(partName: String): AnnotationSpec.Builder =
-        AnnotationSpec
-            .builder(SpringImports.REQUEST_PART)
-            .addMember("value = %S", partName)
 
     fun requestParamBuilder(): AnnotationSpec.Builder =
         AnnotationSpec
