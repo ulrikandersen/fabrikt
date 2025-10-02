@@ -18,6 +18,7 @@ import com.cjbooms.fabrikt.model.KotlinTypeInfo
 import com.cjbooms.fabrikt.model.KotlinTypes
 import com.cjbooms.fabrikt.model.PathParam
 import com.cjbooms.fabrikt.model.QueryParam
+import com.cjbooms.fabrikt.model.MultipartParameter
 import com.cjbooms.fabrikt.model.RequestParameter
 import com.cjbooms.fabrikt.model.SourceApi
 import com.cjbooms.fabrikt.util.KaizenParserExtensions.isSingleResource
@@ -102,12 +103,28 @@ class SpringControllerInterfaceGenerator(
                             .maybeAddAnnotation(validationAnnotations.parameterValid())
                             .build()
 
+                    is HeaderParam ->
+                        it
+                            .toParameterSpecBuilder()
+                            .addAnnotation(
+                                SpringAnnotations.requestHeaderBuilder()
+                                    .addMember("value = %S", it.oasName)
+                                    .build(),
+                            )
+                            .maybeAddAnnotation(validationAnnotations.parameterValid())
+                            .build()
+
+                    is MultipartParameter ->
+                        throw UnsupportedOperationException("Multipart parameters are not supported for Spring controllers")
+
                     is RequestParameter ->
                         it
                             .toParameterSpecBuilder()
                             .addValidationAnnotations(it)
                             .addSpringParamAnnotation(it)
                             .build()
+
+                    else -> throw UnsupportedOperationException("${it::class} is not supported")
                 }
             }
             .forEach { funcSpec.addParameter(it) }

@@ -4,6 +4,7 @@ import com.cjbooms.fabrikt.generators.model.ModelGenerator.Companion.toModelType
 import com.cjbooms.fabrikt.model.BodyParameter
 import com.cjbooms.fabrikt.model.IncomingParameter
 import com.cjbooms.fabrikt.model.KotlinTypeInfo
+import com.cjbooms.fabrikt.model.MultipartParameter
 import com.cjbooms.fabrikt.model.RequestParameter
 import com.cjbooms.fabrikt.util.KaizenParserExtensions.safeName
 import com.cjbooms.fabrikt.util.NormalisedString.camelCase
@@ -172,16 +173,43 @@ object GeneratorUtils {
         extraParameters: List<IncomingParameter>,
     ): List<IncomingParameter> {
 
-        val bodies = requestBody.contentMediaTypes.values
-            .map {
-                BodyParameter(
-                    it.schema.safeName().toKotlinParameterName().ifEmpty { it.schema.toVarName() },
-                    requestBody.description,
-                    toModelType(basePackage, KotlinTypeInfo.from(it.schema)),
-                    it.schema
-                )
-            }
-            .distinctBy { it.schema.safeName().toKotlinParameterName().ifEmpty { it.schema.toVarName() } }
+        val bodies = if (hasMultipartRequestBody()) {
+            // For multipart requests, create individual parameters for each part
+            requestBody?.getMultipartSchema()?.let { multipartSchema ->
+                multipartSchema.properties?.map { (partName, partSchema) ->
+                    val isBinaryFile = (partSchema.format == "binary" && partSchema.type == "string") ||
+                        (partSchema.type == "array" && partSchema.itemsSchema?.format == "binary" && partSchema.itemsSchema?.type == "string")
+                    val type = toModelType(basePackage, KotlinTypeInfo.from(partSchema))
+                    val contentType = when {
+                        isBinaryFile -> "application/octet-stream"
+                        partSchema.type == "string" -> "text/plain"
+                        else -> "application/json"
+                    }
+
+                    MultipartParameter(
+                        oasName = partName,
+                        description = partSchema.description,
+                        type = type,
+                        schema = partSchema,
+                        partName = partName,
+                        isBinaryFile = isBinaryFile,
+                        contentType = contentType
+                    )
+                } ?: emptyList()
+            } ?: emptyList()
+        } else {
+            // Regular body parameters (non-multipart)
+            requestBody.contentMediaTypes.values
+                .map {
+                    BodyParameter(
+                        it.schema.safeName().toKotlinParameterName().ifEmpty { it.schema.toVarName() },
+                        requestBody.description,
+                        toModelType(basePackage, KotlinTypeInfo.from(it.schema)),
+                        it.schema
+                    )
+                }
+                .distinctBy { it.schema.safeName().toKotlinParameterName().ifEmpty { it.schema.toVarName() } }
+        }
 
         val parameters = mergeParameters(pathParameters, parameters)
             .map {
@@ -209,6 +237,15 @@ object GeneratorUtils {
                     p.description,
                     p.type,
                     p.schema,
+                )
+                is MultipartParameter -> MultipartParameter(
+                    "multipart_${p.oasName}".toKotlinParameterName(),
+                    p.description,
+                    p.type,
+                    p.schema,
+                    p.partName,
+                    p.isBinaryFile,
+                    p.contentType,
                 )
                 is RequestParameter -> RequestParameter(
                     "${p.parameterLocation}_${p.oasName}".toKotlinParameterName(),
@@ -256,5 +293,28 @@ object GeneratorUtils {
         }
 
         return objectBuilder.build()
+    }
+
+    /**
+     * Checks if the given RequestBody contains multipart/form-data content type
+     */
+    fun RequestBody.isMultipartFormData(): Boolean {
+        return this.contentMediaTypes.keys.any { it.startsWith("multipart/form-data") }
+    }
+
+    /**
+     * Gets the multipart/form-data schema from the RequestBody if it exists
+     */
+    fun RequestBody.getMultipartSchema(): Schema? {
+        return this.contentMediaTypes.entries
+            .find { it.key.startsWith("multipart/form-data") }
+            ?.value?.schema
+    }
+
+    /**
+     * Checks if the given Operation has a multipart/form-data request body
+     */
+    fun Operation.hasMultipartRequestBody(): Boolean {
+        return this.requestBody?.isMultipartFormData() == true
     }
 }
