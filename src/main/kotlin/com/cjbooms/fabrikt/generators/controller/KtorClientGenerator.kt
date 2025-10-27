@@ -31,7 +31,6 @@ class KtorClientGenerator(
 ) : ClientGenerator {
     override fun generate(options: Set<ClientCodeGenOptionType>): Clients {
         val resources: List<TypeSpec> = api.openApi3.routeToPaths().flatMap { (resourceName, paths) ->
-            val resourceContainerBuilder = TypeSpec.objectBuilder(resourceName)
             val clientClassBuilder = TypeSpec.classBuilder(resourceName + "Client")
                 .addProperty(
                     PropertySpec.builder("httpClient", ClassName("io.ktor.client", "HttpClient"))
@@ -225,7 +224,7 @@ class KtorClientGenerator(
                 }
             }
 
-            listOf(resourceContainerBuilder.build(), clientClassBuilder.build())
+            listOf(clientClassBuilder.build())
         }
 
         return Clients(resources.map { ClientType(it, packages.base) }.toSet())

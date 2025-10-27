@@ -12,8 +12,6 @@ import io.ktor.http.isSuccess
 import kotlin.String
 import kotlin.Unit
 
-public object Example
-
 public class ExampleClient(
     public val httpClient: HttpClient,
 ) {

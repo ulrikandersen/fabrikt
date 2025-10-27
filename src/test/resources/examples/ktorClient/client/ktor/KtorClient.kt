@@ -17,8 +17,6 @@ import kotlin.String
 import kotlin.Unit
 import kotlin.collections.List
 
-public object Items
-
 public class ItemsClient(
     public val httpClient: HttpClient,
 ) {
@@ -72,8 +70,6 @@ public class ItemsClient(
         ) : GetItemsResult()
     }
 }
-
-public object CatalogsItems
 
 public class CatalogsItemsClient(
     public val httpClient: HttpClient,
@@ -135,8 +131,6 @@ public class CatalogsItemsClient(
     }
 }
 
-public object ItemsSubitems
-
 public class ItemsSubitemsClient(
     public val httpClient: HttpClient,
 ) {
@@ -178,8 +172,6 @@ public class ItemsSubitemsClient(
         ) : GetSubItemResult()
     }
 }
-
-public object CatalogsSearch
 
 public class CatalogsSearchClient(
     public val httpClient: HttpClient,
@@ -242,8 +234,6 @@ public class CatalogsSearchClient(
         ) : SearchCatalogItemsResult()
     }
 }
-
-public object CatalogsItemsAvailability
 
 public class CatalogsItemsAvailabilityClient(
     public val httpClient: HttpClient,
@@ -325,8 +315,6 @@ public class CatalogsItemsAvailabilityClient(
     }
 }
 
-public object Uptime
-
 public class UptimeClient(
     public val httpClient: HttpClient,
 ) {
@@ -360,5 +348,41 @@ public class UptimeClient(
         public data class Error(
             public val response: HttpResponse,
         ) : `Get_System-UptimeResult`()
+    }
+}
+
+public class NoContentClient(
+    public val httpClient: HttpClient,
+) {
+    /**
+     * Endpoint with no content response
+     *
+     *
+     * Returns:
+     * 	[kotlin.Unit] if the request was successful.
+     */
+    public suspend fun getNoContent(): GetNoContentResult {
+        val url = """/no-content"""
+
+        val response =
+            httpClient.`get`(url) {
+                `header`("Accept", "application/json")
+            }
+        return if (response.status.isSuccess()) {
+            GetNoContentResult.Success(response.body(), response)
+        } else {
+            GetNoContentResult.Error(response)
+        }
+    }
+
+    public sealed class GetNoContentResult {
+        public data class Success(
+            public val `data`: Unit,
+            public val response: HttpResponse,
+        ) : GetNoContentResult()
+
+        public data class Error(
+            public val response: HttpResponse,
+        ) : GetNoContentResult()
     }
 }
