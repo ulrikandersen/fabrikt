@@ -57,7 +57,8 @@ The library currently has support for generating:
 * Clients
   * **OkHttp Client (w/ Jackson Models)** - with the option for a resilience4j fault-tolerance wrapper
   * **OpenFeign** annotated client interfaces
-  * **Ktor Client (w/ Kotlinx.serialization Models)**
+  * **Ktor Client (w/ Jackson & Kotlin Serialization models)**
+  * **Spring HTTP Interface** annotated client interfaces
 * Controllers
   * **Spring MVC** annotated controller interfaces
   * **Micronaut** HTTP annotated controller interfaces
