@@ -1,11 +1,8 @@
 name: Publish Docker Image to GitHub Container Registry
 
-# Trigger on releases and on pushes to master
 on:
   release:
     types: [published]
-  push:
-    branches: [master]
 
 env:
   REGISTRY: ghcr.io
@@ -21,8 +18,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # Required for git-version plugin
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
@@ -37,14 +32,10 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            # Tag with version on release
+            # Tag with full version on release
             type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-            # Tag with latest on release
+            # Tag with latest
             type=raw,value=latest,enable={{is_default_branch}}
-            # Tag with sha on master branch
-            type=sha,prefix={{branch}}-,enable=${{ github.ref == 'refs/heads/master' }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
