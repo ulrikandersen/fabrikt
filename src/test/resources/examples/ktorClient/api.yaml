@@ -213,6 +213,14 @@ paths:
               schema:
                 type: string
 
+  /no-content:
+    get:
+      summary: Endpoint with no content response
+      operationId: getNoContent
+      responses:
+        '204':
+          description: No content
+
 components:
   schemas:
     SortOrder:

@@ -37,9 +37,13 @@ class KtorClientJacksonTest {
 
     private val wiremock: WireMockServer = WireMockServer(options().port(port).notifier(ConsoleNotifier(true)))
 
+    init {
+        wiremock.start()
+    }
+
     @BeforeEach
     fun setUp() {
-        wiremock.start()
+        wiremock.resetAll()
     }
 
     private fun createHttpClient() = HttpClient(CIO) {
