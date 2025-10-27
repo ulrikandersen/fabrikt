@@ -55,7 +55,7 @@ public class ItemsClient(
         return if (response.status.isSuccess()) {
             GetItemsResult.Success(response.body(), response)
         } else {
-            GetItemsResult.Error(response)
+            GetItemsResult.Failure(response)
         }
     }
 
@@ -65,7 +65,7 @@ public class ItemsClient(
             public val response: HttpResponse,
         ) : GetItemsResult()
 
-        public data class Error(
+        public data class Failure(
             public val response: HttpResponse,
         ) : GetItemsResult()
     }
@@ -115,7 +115,7 @@ public class CatalogsItemsClient(
         return if (response.status.isSuccess()) {
             CreateItemResult.Success(response.body(), response)
         } else {
-            CreateItemResult.Error(response)
+            CreateItemResult.Failure(response)
         }
     }
 
@@ -125,7 +125,7 @@ public class CatalogsItemsClient(
             public val response: HttpResponse,
         ) : CreateItemResult()
 
-        public data class Error(
+        public data class Failure(
             public val response: HttpResponse,
         ) : CreateItemResult()
     }
@@ -157,7 +157,7 @@ public class ItemsSubitemsClient(
         return if (response.status.isSuccess()) {
             GetSubItemResult.Success(response.body(), response)
         } else {
-            GetSubItemResult.Error(response)
+            GetSubItemResult.Failure(response)
         }
     }
 
@@ -167,7 +167,7 @@ public class ItemsSubitemsClient(
             public val response: HttpResponse,
         ) : GetSubItemResult()
 
-        public data class Error(
+        public data class Failure(
             public val response: HttpResponse,
         ) : GetSubItemResult()
     }
@@ -219,7 +219,7 @@ public class CatalogsSearchClient(
         return if (response.status.isSuccess()) {
             SearchCatalogItemsResult.Success(response.body(), response)
         } else {
-            SearchCatalogItemsResult.Error(response)
+            SearchCatalogItemsResult.Failure(response)
         }
     }
 
@@ -229,7 +229,7 @@ public class CatalogsSearchClient(
             public val response: HttpResponse,
         ) : SearchCatalogItemsResult()
 
-        public data class Error(
+        public data class Failure(
             public val response: HttpResponse,
         ) : SearchCatalogItemsResult()
     }
@@ -261,7 +261,7 @@ public class CatalogsItemsAvailabilityClient(
         return if (response.status.isSuccess()) {
             GetByCatalogIdAndItemIdResult.Success(response.body(), response)
         } else {
-            GetByCatalogIdAndItemIdResult.Error(response)
+            GetByCatalogIdAndItemIdResult.Failure(response)
         }
     }
 
@@ -288,7 +288,7 @@ public class CatalogsItemsAvailabilityClient(
         return if (response.status.isSuccess()) {
             PutByCatalogIdAndItemIdResult.Success(response.body(), response)
         } else {
-            PutByCatalogIdAndItemIdResult.Error(response)
+            PutByCatalogIdAndItemIdResult.Failure(response)
         }
     }
 
@@ -298,7 +298,7 @@ public class CatalogsItemsAvailabilityClient(
             public val response: HttpResponse,
         ) : GetByCatalogIdAndItemIdResult()
 
-        public data class Error(
+        public data class Failure(
             public val response: HttpResponse,
         ) : GetByCatalogIdAndItemIdResult()
     }
@@ -309,7 +309,7 @@ public class CatalogsItemsAvailabilityClient(
             public val response: HttpResponse,
         ) : PutByCatalogIdAndItemIdResult()
 
-        public data class Error(
+        public data class Failure(
             public val response: HttpResponse,
         ) : PutByCatalogIdAndItemIdResult()
     }
@@ -335,7 +335,7 @@ public class UptimeClient(
         return if (response.status.isSuccess()) {
             `Get_System-UptimeResult`.Success(response.body(), response)
         } else {
-            `Get_System-UptimeResult`.Error(response)
+            `Get_System-UptimeResult`.Failure(response)
         }
     }
 
@@ -345,7 +345,7 @@ public class UptimeClient(
             public val response: HttpResponse,
         ) : `Get_System-UptimeResult`()
 
-        public data class Error(
+        public data class Failure(
             public val response: HttpResponse,
         ) : `Get_System-UptimeResult`()
     }
@@ -371,7 +371,7 @@ public class NoContentClient(
         return if (response.status.isSuccess()) {
             GetNoContentResult.Success(response.body(), response)
         } else {
-            GetNoContentResult.Error(response)
+            GetNoContentResult.Failure(response)
         }
     }
 
@@ -381,7 +381,7 @@ public class NoContentClient(
             public val response: HttpResponse,
         ) : GetNoContentResult()
 
-        public data class Error(
+        public data class Failure(
             public val response: HttpResponse,
         ) : GetNoContentResult()
     }

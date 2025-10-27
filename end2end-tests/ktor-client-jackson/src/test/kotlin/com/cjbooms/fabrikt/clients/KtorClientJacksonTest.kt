@@ -94,7 +94,7 @@ class KtorClientJacksonTest {
                         println("Created item with name: ${result.data.name}. Status code: ${result.response.status}")
                     }
 
-                    is CatalogsItemsClient.CreateItemResult.Error -> {
+                    is CatalogsItemsClient.CreateItemResult.Failure -> {
                         fail("Failed to create item.\nStatus code: ${result.response.status}\nBody: ${result.response.bodyAsText()}")
                     }
                 }
@@ -130,7 +130,7 @@ class KtorClientJacksonTest {
                         fail("Expected 404 but got success")
                     }
 
-                    is CatalogsItemsClient.CreateItemResult.Error -> {
+                    is CatalogsItemsClient.CreateItemResult.Failure -> {
                         println("Failed to create item. Status code: ${result.response.status}")
                     }
                 }

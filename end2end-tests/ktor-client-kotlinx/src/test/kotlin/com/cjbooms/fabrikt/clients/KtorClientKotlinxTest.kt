@@ -99,7 +99,7 @@ class KtorClientKotlinxTest {
                         println("Created item with name: ${result.data.name}. Status code: ${result.response.status}")
                     }
 
-                    is CatalogsItemsClient.CreateItemResult.Error -> {
+                    is CatalogsItemsClient.CreateItemResult.Failure -> {
                         fail("Failed to create item.\nStatus code: ${result.response.status}\nBody: ${result.response.bodyAsText()}")
                     }
                 }
@@ -135,7 +135,7 @@ class KtorClientKotlinxTest {
                         fail("Expected 404 but got success")
                     }
 
-                    is CatalogsItemsClient.CreateItemResult.Error -> {
+                    is CatalogsItemsClient.CreateItemResult.Failure -> {
                         println("Failed to create item. Status code: ${result.response.status}")
                     }
                 }
@@ -292,7 +292,7 @@ class KtorClientKotlinxTest {
         }
 
         @Test
-        fun `returns Error on 302 Found`() {
+        fun `returns Failure on 302 Found`() {
             wiremock.post {
                 urlPath like "/catalogs/catalog-a/items"
             } returns {
@@ -316,7 +316,7 @@ class KtorClientKotlinxTest {
                     xRequestID = "request-id"
                 )
 
-                assertInstanceOf<CatalogsItemsClient.CreateItemResult.Error>(result)
+                assertInstanceOf<CatalogsItemsClient.CreateItemResult.Failure>(result)
                 assertEquals(302, result.response.status.value)
                 assertEquals("http://example.com/other-resource", result.response.headers["Location"])
             }

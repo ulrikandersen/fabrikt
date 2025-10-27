@@ -54,7 +54,7 @@ class KtorClientGenerator(
                     // build result sealed class
                     val resultClassBuilder = TypeSpec.classBuilder(resultClassName(operation, verb, pathParams))
                         .addModifiers(KModifier.SEALED)
-                    // add success and error
+                    // add success and failure types
                     resultClassBuilder.addType(
                         TypeSpec.classBuilder("Success")
                             .addModifiers(KModifier.DATA)
@@ -78,7 +78,7 @@ class KtorClientGenerator(
                             .build()
                     )
                         .addType(
-                            TypeSpec.classBuilder("Error")
+                            TypeSpec.classBuilder("Failure")
                                 .addModifiers(KModifier.DATA)
                                 .addProperty(
                                     PropertySpec.builder("response", ClassName("io.ktor.client.statement", "HttpResponse"))
@@ -194,7 +194,7 @@ class KtorClientGenerator(
                                 .indent()
                                 .apply {
                                     addStatement(
-                                        "%T.Error(response)",
+                                        "%T.Failure(response)",
                                         ClassName("", resultClassName(operation, verb, pathParams))
                                     )
                                 }

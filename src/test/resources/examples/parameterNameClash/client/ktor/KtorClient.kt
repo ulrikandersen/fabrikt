@@ -44,7 +44,7 @@ public class ExampleClient(
         return if (response.status.isSuccess()) {
             GetByPathBResult.Success(response.body(), response)
         } else {
-            GetByPathBResult.Error(response)
+            GetByPathBResult.Failure(response)
         }
     }
 
@@ -79,7 +79,7 @@ public class ExampleClient(
         return if (response.status.isSuccess()) {
             PostResult.Success(response.body(), response)
         } else {
-            PostResult.Error(response)
+            PostResult.Failure(response)
         }
     }
 
@@ -89,7 +89,7 @@ public class ExampleClient(
             public val response: HttpResponse,
         ) : GetByPathBResult()
 
-        public data class Error(
+        public data class Failure(
             public val response: HttpResponse,
         ) : GetByPathBResult()
     }
@@ -100,7 +100,7 @@ public class ExampleClient(
             public val response: HttpResponse,
         ) : PostResult()
 
-        public data class Error(
+        public data class Failure(
             public val response: HttpResponse,
         ) : PostResult()
     }
