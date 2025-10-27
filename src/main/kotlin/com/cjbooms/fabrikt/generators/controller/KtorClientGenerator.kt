@@ -11,6 +11,7 @@ import com.cjbooms.fabrikt.model.ClientType
 import com.cjbooms.fabrikt.model.Clients
 import com.cjbooms.fabrikt.model.GeneratedFile
 import com.cjbooms.fabrikt.model.IncomingParameter
+import com.cjbooms.fabrikt.model.KotlinTypeInfo
 import com.cjbooms.fabrikt.model.RequestParameter
 import com.cjbooms.fabrikt.model.SourceApi
 import com.cjbooms.fabrikt.util.KaizenParserExtensions.routeToPaths
@@ -122,7 +123,7 @@ class KtorClientGenerator(
                                         addStatement("val params = buildList {")
                                         indent()
                                         queryParams.forEach { param ->
-                                            val isArrayType = param.typeInfo is com.cjbooms.fabrikt.model.KotlinTypeInfo.Array
+                                            val isArrayType = param.typeInfo is KotlinTypeInfo.Array
                                             if (isArrayType) {
                                                 if (param.isRequired) {
                                                     addStatement("%L.forEach { add(\"%L=\${it}\") }", param.name, param.originalName)
