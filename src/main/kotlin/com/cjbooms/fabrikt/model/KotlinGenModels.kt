@@ -57,7 +57,7 @@ data class Clients(val clients: Collection<ClientType>) : KotlinTypes(clients) {
         val builder = FileSpec.builder(it.destinationPackage, it.className.simpleName)
             .addType(it.spec)
             .addFileDisclaimer()
-        it.imports.forEach { (pkg, name) -> builder.addFileDisclaimer()
+        it.imports.forEach { (pkg, name) -> builder
             .addImport(pkg, name) }
         builder.build()
     }.toSet()

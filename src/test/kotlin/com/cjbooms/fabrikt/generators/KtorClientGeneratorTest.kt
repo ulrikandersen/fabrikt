@@ -7,7 +7,7 @@ import com.cjbooms.fabrikt.cli.ValidationLibrary
 import com.cjbooms.fabrikt.configurations.Packages
 import com.cjbooms.fabrikt.generators.controller.KtorClientGenerator
 import com.cjbooms.fabrikt.model.SourceApi
-import com.cjbooms.fabrikt.util.FileUtils.toSingleFile
+import com.cjbooms.fabrikt.util.TestFileUtils.toSingleFile
 import com.cjbooms.fabrikt.util.GeneratedCodeAsserter.Companion.assertThatGenerated
 import com.cjbooms.fabrikt.util.ModelNameRegistry
 import org.junit.jupiter.api.BeforeEach

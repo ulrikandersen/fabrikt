@@ -190,7 +190,7 @@ class KtorClientJacksonTest {
                 assertEquals("catalog-a", capturedCatalogId.captured)
                 assertEquals("query", capturedQuery.captured)
                 assertEquals("10", capturedPage.captured)
-                assertEquals("DESC", capturedSort.captured)
+                assertEquals("desc", capturedSort.captured)
                 assertEquals("request-id-123", capturedXTracingID.captured)
             }
         }

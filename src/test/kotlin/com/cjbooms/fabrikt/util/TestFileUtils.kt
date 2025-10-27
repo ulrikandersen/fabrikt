@@ -4,7 +4,7 @@ import com.cjbooms.fabrikt.model.ClientType
 import com.cjbooms.fabrikt.model.Models
 import com.squareup.kotlinpoet.FileSpec
 
-object FileUtils {
+object TestFileUtils {
     fun Collection<ClientType>.toSingleFile(): String {
         val destPackage = if (this.isNotEmpty()) first().destinationPackage else ""
         val singleFileBuilder = FileSpec.builder(destPackage, "dummyFilename")
