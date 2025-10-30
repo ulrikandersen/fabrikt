@@ -72,21 +72,6 @@ fun ResponseBody.deserialize(): ByteArray? = this.byteStream().readAllBytes()
 
 fun String?.isNotBlankOrNull() = if (this.isNullOrBlank()) null else this
 
-private fun <T> Request.execute(client: OkHttpClient, bodyReader: (ResponseBody?) -> T?): ApiResponse<T> =
-    client.newCall(this).execute().use { response ->
-        when {
-            response.isSuccessful ->
-                ApiResponse(response.code, response.headers, bodyReader(response.body))
-            response.isRedirection() ->
-                throw ApiRedirectException(response.code, response.headers, response.errorMessage())
-            response.isBadRequest() ->
-                throw ApiClientException(response.code, response.headers, response.errorMessage())
-            response.isServerError() ->
-                throw ApiServerException(response.code, response.headers, response.errorMessage())
-            else -> throw ApiException("[${response.code}]: ${response.errorMessage()}")
-        }
-    }
-
 private fun Response.errorMessage(): String = this.body?.string() ?: this.message
 
 private fun Response.isBadRequest(): Boolean = this.code in 400..499
