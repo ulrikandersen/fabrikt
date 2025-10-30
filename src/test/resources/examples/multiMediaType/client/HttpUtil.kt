@@ -35,10 +35,21 @@ fun Headers.Builder.header(key: String, value: String?): Headers.Builder = this.
 
 @Throws(ApiException::class)
 fun <T> Request.execute(client: OkHttpClient, objectMapper: ObjectMapper, typeRef: TypeReference<T>): ApiResponse<T> =
+    doRequest(client) {
+        responseBody -> responseBody?.deserialize(objectMapper, typeRef)
+    }
+
+@Throws(ApiException::class)
+fun Request.execute(client: OkHttpClient): ApiResponse<ByteArray> =
+    doRequest(client) {
+        responseBody -> responseBody?.deserialize()
+    }
+
+private fun <T> Request.doRequest(client: OkHttpClient, bodyReader: (ResponseBody?) -> T?): ApiResponse<T> =
     client.newCall(this).execute().use { response ->
         when {
             response.isSuccessful ->
-                ApiResponse(response.code, response.headers, response.body?.deserialize(objectMapper, typeRef))
+                ApiResponse(response.code, response.headers, bodyReader(response.body))
             response.isRedirection() ->
                 throw ApiRedirectException(response.code, response.headers, response.errorMessage())
             response.isBadRequest() ->
@@ -57,7 +68,24 @@ fun String.pathParam(vararg params: Pair<String, Any>): String = params.fold(thi
 fun <T> ResponseBody.deserialize(objectMapper: ObjectMapper, typeRef: TypeReference<T>): T? =
     this.string().isNotBlankOrNull()?.let { objectMapper.readValue(it, typeRef) }
 
+fun ResponseBody.deserialize(): ByteArray? = this.byteStream().readAllBytes()
+
 fun String?.isNotBlankOrNull() = if (this.isNullOrBlank()) null else this
+
+private fun <T> Request.execute(client: OkHttpClient, bodyReader: (ResponseBody?) -> T?): ApiResponse<T> =
+    client.newCall(this).execute().use { response ->
+        when {
+            response.isSuccessful ->
+                ApiResponse(response.code, response.headers, bodyReader(response.body))
+            response.isRedirection() ->
+                throw ApiRedirectException(response.code, response.headers, response.errorMessage())
+            response.isBadRequest() ->
+                throw ApiClientException(response.code, response.headers, response.errorMessage())
+            response.isServerError() ->
+                throw ApiServerException(response.code, response.headers, response.errorMessage())
+            else -> throw ApiException("[${response.code}]: ${response.errorMessage()}")
+        }
+    }
 
 private fun Response.errorMessage(): String = this.body?.string() ?: this.message
 

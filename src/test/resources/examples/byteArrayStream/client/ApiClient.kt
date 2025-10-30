@@ -51,6 +51,6 @@ public class BinaryDataClient(
                 .post(objectMapper.writeValueAsString(applicationOctetStream).toRequestBody("application/octet-stream".toMediaType()))
                 .build()
 
-        return request.execute(okHttpClient, objectMapper, jacksonTypeRef())
+        return request.execute(okHttpClient)
     }
 }

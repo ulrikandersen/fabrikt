@@ -28,6 +28,7 @@ import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.asTypeName
+import kotlin.reflect.KClass
 
 object ClientGeneratorUtils {
     const val ACCEPT_HEADER_NAME = "Accept"
@@ -38,22 +39,30 @@ object ClientGeneratorUtils {
 
     /**
      * Gives the Kotlin return type for an API call based on the Content-Types specified in the Operation.
-     * If multiple media types are found, but their response schema is the same, then the first media type is used and kotlin model for the schema is returned.
+     */
+    fun Operation.getReturnType(packages: Packages): TypeName =
+        when (val returnType = getReturnType()) {
+            is KotlinTypeInfo -> toModelType(packages.base, returnType)
+            is KClass<*> -> returnType.asTypeName()
+            else -> throw IllegalStateException("Unsupported return type: $returnType")
+        }
+
+    /**
+     * Gives the Kotlin return type for an API call based on the Content-Types specified in the Operation.
+     * If multiple media types are found, but their response schema is the same, then the first media type is used and
+     * kotlin model for the schema is returned.
      * If there are several possible response schemas, then the return type is JsonNode, so they are all covered.
      * If no response body is found, Unit is returned.
      */
-    fun Operation.getReturnType(packages: Packages): TypeName {
+     fun Operation.getReturnType(): Any {
         return if (!hasAnySuccessResponseSchemas()) {
-            Unit::class.asTypeName()
+            Unit::class
         } else if (hasMultipleSuccessResponseSchemas()) {
-            JsonNode::class.asTypeName()
+            JsonNode::class
         } else {
             this.getPrimaryContentMediaType()?.let {
-                toModelType(
-                    packages.base,
-                    KotlinTypeInfo.from(it.value.schema)
-                )
-            } ?: Unit::class.asTypeName()
+                KotlinTypeInfo.from(it.value.schema)
+            } ?: Unit::class
         }
     }
 
