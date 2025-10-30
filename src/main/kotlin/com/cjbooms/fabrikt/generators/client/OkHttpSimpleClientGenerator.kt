@@ -11,6 +11,7 @@ import com.cjbooms.fabrikt.generators.client.ClientGeneratorUtils.ADDITIONAL_HEA
 import com.cjbooms.fabrikt.generators.client.ClientGeneratorUtils.ADDITIONAL_QUERY_PARAMETERS_PARAMETER_NAME
 import com.cjbooms.fabrikt.generators.client.ClientGeneratorUtils.addIncomingParameters
 import com.cjbooms.fabrikt.generators.client.ClientGeneratorUtils.deriveClientParameters
+import com.cjbooms.fabrikt.generators.client.ClientGeneratorUtils.getReturnType
 import com.cjbooms.fabrikt.generators.client.ClientGeneratorUtils.simpleClientName
 import com.cjbooms.fabrikt.generators.client.ClientGeneratorUtils.toClientReturnType
 import com.cjbooms.fabrikt.model.BodyParameter
@@ -39,6 +40,7 @@ import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asTypeName
 import java.nio.file.Path
 import com.cjbooms.fabrikt.util.toUpperCase
+import com.squareup.kotlinpoet.TypeName
 
 class OkHttpSimpleClientGenerator(
     private val packages: Packages,
@@ -226,7 +228,12 @@ data class SimpleClientOperationStatement(
     }
 
     private fun CodeBlock.Builder.addRequestExecutionStatement() =
-        this.add("\nreturn request.execute(okHttpClient, objectMapper, jacksonTypeRef())\n")
+        when (operation.getReturnType()) {
+            is KotlinTypeInfo.ByteArray ->
+                this.add("\nreturn request.execute(okHttpClient)\n")
+            else ->
+                this.add("\nreturn request.execute(okHttpClient, objectMapper, jacksonTypeRef())\n")
+        }
 
     private fun CodeBlock.Builder.addRequestSerializerStatement(verb: String) {
         val requestBody = operation.requestBody
