@@ -8,6 +8,7 @@
   * [Gradle w/ custom task](#gradle-w-custom-task)
   * [Gradle w/ plugin](#gradle-w-plugin)
   * [Maven](#maven)
+  * [Docker](#docker)
 * [Getting the Most from Fabrikt](#getting-the-most-from-fabrikt)
 * [Configuration Options](#configuration-options)
 * [Original Motivation](#original-motivation)
@@ -167,6 +168,22 @@ fabrikt {
 ### Maven
 
 The [exec-maven-plugin](http://www.mojohaus.org/exec-maven-plugin/examples/example-exec-using-plugin-dependencies.html) is capable of downloading the Fabrikt library from Maven Central and executing its main method with defined arguments.
+
+### Docker
+
+Fabrikt is also available as a Docker image, which can be convenient for CI/CD pipelines or environments where you prefer not to install Java directly.
+
+The Docker image can be invoked as follows:
+
+```bash
+docker run --rm -v $(pwd):/workspace ghcr.io/fabrikt-io/fabrikt:latest \
+  --output-directory '.' \
+  --base-package 'com.example' \
+  --api-file 'openapi.yaml' \
+  --targets 'http_models'
+```
+
+The command mounts your current directory to `/workspace` in the container, where Fabrikt will read the OpenAPI specification and write the generated code.
 
 ## Getting the Most from Fabrikt
 
