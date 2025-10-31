@@ -12,7 +12,7 @@ jobs:
           RESPONSE=$(curl -s -u "${{ secrets.OSSRH_USER_TOKEN_USERNAME }}:${{ secrets.OSSRH_USER_TOKEN_PASSWORD }}" \
             "https://ossrh-staging-api.central.sonatype.com/manual/search/repositories?ip=any&profile_id=com.cjbooms")
           
-          REPO_KEY=$(echo "$RESPONSE" | jq -r '.repositories[0].key')
+          REPO_KEY=$(echo "$RESPONSE" | jq -r '.repositories[] | select(.state == "open") | .key')
 
           if [[ "$REPO_KEY" == "null" ]]; then
             echo "No open repository found"
