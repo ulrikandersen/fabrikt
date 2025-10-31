@@ -5,7 +5,6 @@
 //
 package examples.fileComment.client
 
-import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
 import examples.fileComment.models.Pet
 import kotlin.Any
 import kotlin.String
