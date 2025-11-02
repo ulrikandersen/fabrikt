@@ -12,6 +12,8 @@ import com.cjbooms.fabrikt.cli.ModelCodeGenOptionType
 import com.cjbooms.fabrikt.cli.OutputOptionType
 import com.cjbooms.fabrikt.cli.SerializationLibrary
 import com.cjbooms.fabrikt.cli.ValidationLibrary
+import com.cjbooms.fabrikt.model.MicronautSerdeAnnotations
+import com.cjbooms.fabrikt.model.SerializationAnnotations
 
 object MutableSettings {
     var generationTypes: Set<CodeGenerationType> = mutableSetOf()
@@ -42,6 +44,18 @@ object MutableSettings {
         private set
     var outputOptions: Set<OutputOptionType> = mutableSetOf()
         private set
+
+    /**
+     * Returns the effective serialization annotations to use.
+     * If MICRONAUT_SERDEABLE option is enabled, uses MicronautSerdeAnnotations.
+     * Otherwise, uses the serialization annotations from the configured serialization library.
+     */
+    val effectiveSerializationAnnotations: SerializationAnnotations
+        get() = if (ModelCodeGenOptionType.MICRONAUT_SERDEABLE in modelOptions) {
+            MicronautSerdeAnnotations
+        } else {
+            serializationLibrary.serializationAnnotations
+        }
 
     fun updateSettings(
         genTypes: Set<CodeGenerationType> = emptySet(),
