@@ -76,7 +76,7 @@ class ModelGenerator(
 ) {
     private val options = MutableSettings.modelOptions
     private val validationAnnotations: ValidationAnnotations = MutableSettings.validationLibrary.annotations
-    private val serializationAnnotations: SerializationAnnotations = MutableSettings.serializationLibrary.serializationAnnotations
+    private val serializationAnnotations: SerializationAnnotations = MutableSettings.effectiveSerializationAnnotations
     private val externalRefResolutionMode: ExternalReferencesResolutionMode = MutableSettings.externalRefResolutionMode
 
     companion object {
@@ -482,6 +482,11 @@ class ModelGenerator(
             )
             .build()
 
+        // Only Micronaut Serde needs @Serdeable on enums; Jackson and kotlinx don't annotate enum classes
+        if (options.contains(ModelCodeGenOptionType.MICRONAUT_SERDEABLE)) {
+            serializationAnnotations.addClassAnnotation(classBuilder)
+        }
+
         return classBuilder.addType(companion).build()
     }
 
@@ -602,8 +607,9 @@ class ModelGenerator(
         val interfaceBuilder = TypeSpec.interfaceBuilder(generatedType(packages.base, modelName))
             .addModifiers(KModifier.SEALED)
 
+        serializationAnnotations.addClassAnnotation(interfaceBuilder)
+
         if (discriminator != null && discriminator.propertyName != null) {
-            serializationAnnotations.addClassAnnotation(interfaceBuilder)
             serializationAnnotations.addBasePolymorphicTypeAnnotation(interfaceBuilder, discriminator.propertyName)
 
             val mappings = getDiscriminatorMappingsOrDefault(discriminator, members, allSchemas, modelName)
@@ -730,6 +736,7 @@ class ModelGenerator(
             ClassSettings(ClassSettings.PolymorphyType.SUPER, extensions),
         )
 
+        serializationAnnotations.addClassAnnotation(this)
         return this
     }
 
@@ -784,6 +791,8 @@ class ModelGenerator(
             this,
             ClassSettings(ClassSettings.PolymorphyType.SUB, extensions),
         )
+
+        serializationAnnotations.addClassAnnotation(this)
         return this
     }
 

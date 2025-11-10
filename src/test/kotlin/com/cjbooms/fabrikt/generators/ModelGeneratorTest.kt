@@ -323,6 +323,25 @@ class ModelGeneratorTest {
     }
 
     @Test
+    fun `micronaut serde models are generated from a full API definition when the micronaut-serde option is set`() {
+        val basePackage = "examples.micronautSerdeModels"
+        val spec = readTextResource("/examples/micronautSerdeModels/api.yaml")
+        val expectedModels = "/examples/micronautSerdeModels/models/Models.kt"
+        MutableSettings.updateSettings(
+            modelOptions = setOf(ModelCodeGenOptionType.MICRONAUT_SERDEABLE),
+        )
+
+        val models = ModelGenerator(
+            Packages(basePackage),
+            SourceApi(spec),
+        )
+            .generate()
+            .toSingleFile()
+
+        assertThatGenerated(models).isEqualTo(expectedModels)
+    }
+
+    @Test
     fun `micronaut reflection models are generated from a full API definition when the micronaut-reflection option is set`() {
         val basePackage = "examples.micronautReflectionModels"
         val spec = readTextResource("/examples/micronautReflectionModels/api.yaml")
