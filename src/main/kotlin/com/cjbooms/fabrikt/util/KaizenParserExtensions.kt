@@ -101,7 +101,7 @@ object KaizenParserExtensions {
             ?.filterNot { it.isBlank() } ?: emptyList()
     }
 
-    fun Schema.hasAdditionalProperties(): Boolean = Overlay.of(additionalPropertiesSchema).isPresent
+    fun Schema.hasAdditionalProperties(): Boolean = Overlay.of(additionalPropertiesSchema).isPresent && additionalProperties != false
 
     fun Schema.isUnknownAdditionalProperties(oasKey: String) = type == null &&
         (getSchemaNameInParent() ?: oasKey) == "additionalProperties" && properties?.isEmpty() == true
