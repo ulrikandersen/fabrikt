@@ -3,7 +3,7 @@ import org.jetbrains.dokka.gradle.DokkaTask
 
 plugins {
     id("org.jetbrains.kotlin.jvm") version "2.2.10"
-    id("com.github.johnrengelman.shadow") version "8.1.1"
+    id("com.gradleup.shadow") version "8.3.9"
     id("org.jetbrains.dokka") version "1.8.10"
     id("com.palantir.git-version") version "3.0.0"
     id("maven-publish")
@@ -62,6 +62,7 @@ dependencies {
 
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:$kotlinxDateTimeVersion")
 
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
     testImplementation("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
     testImplementation("org.junit.jupiter:junit-jupiter-params:$junitVersion")
