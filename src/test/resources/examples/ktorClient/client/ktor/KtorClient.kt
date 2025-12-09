@@ -4,13 +4,18 @@ import examples.ktorClient.models.Item
 import examples.ktorClient.models.SortOrder
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import io.ktor.client.request.`header`
 import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
-import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.isSuccess
+import io.ktor.serialization.ContentConvertException
+import kotlinx.coroutines.CancellationException
+import kotlinx.serialization.SerializationException
+import java.io.IOException
 import kotlin.Double
 import kotlin.Int
 import kotlin.String
@@ -29,13 +34,15 @@ public class ItemsClient(
      * 	 @param priceLimit Maximum price of items to return
      *
      * Returns:
-     * 	[kotlin.collections.List<examples.ktorClient.models.Item>] if the request was successful.
+     * 	[NetworkResult.Success] with [kotlin.collections.List<examples.ktorClient.models.Item>] if the
+     * request was successful.
+     * 	[NetworkResult.Failure] with a [NetworkError] if the request failed.
      */
     public suspend fun getItems(
         limit: Int? = null,
         category: String? = null,
         priceLimit: Double? = null,
-    ): GetItemsResult {
+    ): NetworkResult<List<Item>> {
         val url =
             buildString {
                 append("""/items""")
@@ -48,26 +55,39 @@ public class ItemsClient(
                 if (params.isNotEmpty()) append("?").append(params.joinToString("&"))
             }
 
-        val response =
-            httpClient.`get`(url) {
-                `header`("Accept", "application/json")
+        return try {
+            val response =
+                httpClient.`get`(url) {
+                    `header`("Accept", "application/json")
+                }
+
+            if (response.status.isSuccess()) {
+                NetworkResult.Success(response.body())
+            } else {
+                val errorText = response.bodyAsText()
+                NetworkResult.Failure(
+                    NetworkError.Http(
+                        statusCode = response.status.value,
+                        message =
+                            errorText.ifBlank { response.status.description },
+                    ),
+                )
             }
-        return if (response.status.isSuccess()) {
-            GetItemsResult.Success(response.body(), response)
-        } else {
-            GetItemsResult.Failure(response)
+        } catch (e: ResponseException) {
+            val status = e.response.status
+            val msg = runCatching { e.response.bodyAsText() }.getOrNull()
+            NetworkResult.Failure(NetworkError.Http(status.value, msg))
+        } catch (e: IOException) {
+            NetworkResult.Failure(NetworkError.Network(e))
+        } catch (e: SerializationException) {
+            NetworkResult.Failure(NetworkError.Serialization(e))
+        } catch (e: ContentConvertException) {
+            NetworkResult.Failure(NetworkError.Serialization(e))
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            NetworkResult.Failure(NetworkError.Unknown)
         }
-    }
-
-    public sealed class GetItemsResult {
-        public data class Success(
-            public val `data`: List<Item>,
-            public val response: HttpResponse,
-        ) : GetItemsResult()
-
-        public data class Failure(
-            public val response: HttpResponse,
-        ) : GetItemsResult()
     }
 }
 
@@ -85,7 +105,8 @@ public class CatalogsItemsClient(
      * 	 @param xTracingID Unique identifier for the tracing
      *
      * Returns:
-     * 	[examples.ktorClient.models.Item] if the request was successful.
+     * 	[NetworkResult.Success] with [examples.ktorClient.models.Item] if the request was successful.
+     * 	[NetworkResult.Failure] with a [NetworkError] if the request failed.
      */
     public suspend fun createItem(
         item: Item,
@@ -93,7 +114,7 @@ public class CatalogsItemsClient(
         randomNumber: Int,
         xRequestID: String,
         xTracingID: String? = null,
-    ): CreateItemResult {
+    ): NetworkResult<Item> {
         val url =
             buildString {
                 append("""/catalogs/$catalogId/items""")
@@ -104,30 +125,43 @@ public class CatalogsItemsClient(
                 if (params.isNotEmpty()) append("?").append(params.joinToString("&"))
             }
 
-        val response =
-            httpClient.post(url) {
-                `header`("Accept", "application/json")
-                `header`("Content-Type", "application/json")
-                setBody(item)
-                `header`("X-Request-ID", xRequestID)
-                `header`("X-Tracing-ID", xTracingID)
+        return try {
+            val response =
+                httpClient.post(url) {
+                    `header`("Accept", "application/json")
+                    `header`("Content-Type", "application/json")
+                    setBody(item)
+                    `header`("X-Request-ID", xRequestID)
+                    `header`("X-Tracing-ID", xTracingID)
+                }
+
+            if (response.status.isSuccess()) {
+                NetworkResult.Success(response.body())
+            } else {
+                val errorText = response.bodyAsText()
+                NetworkResult.Failure(
+                    NetworkError.Http(
+                        statusCode = response.status.value,
+                        message =
+                            errorText.ifBlank { response.status.description },
+                    ),
+                )
             }
-        return if (response.status.isSuccess()) {
-            CreateItemResult.Success(response.body(), response)
-        } else {
-            CreateItemResult.Failure(response)
+        } catch (e: ResponseException) {
+            val status = e.response.status
+            val msg = runCatching { e.response.bodyAsText() }.getOrNull()
+            NetworkResult.Failure(NetworkError.Http(status.value, msg))
+        } catch (e: IOException) {
+            NetworkResult.Failure(NetworkError.Network(e))
+        } catch (e: SerializationException) {
+            NetworkResult.Failure(NetworkError.Serialization(e))
+        } catch (e: ContentConvertException) {
+            NetworkResult.Failure(NetworkError.Serialization(e))
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            NetworkResult.Failure(NetworkError.Unknown)
         }
-    }
-
-    public sealed class CreateItemResult {
-        public data class Success(
-            public val `data`: Item,
-            public val response: HttpResponse,
-        ) : CreateItemResult()
-
-        public data class Failure(
-            public val response: HttpResponse,
-        ) : CreateItemResult()
     }
 }
 
@@ -142,34 +176,48 @@ public class ItemsSubitemsClient(
      * 	 @param subItemId The ID of the subitem
      *
      * Returns:
-     * 	[examples.ktorClient.models.Item] if the request was successful.
+     * 	[NetworkResult.Success] with [examples.ktorClient.models.Item] if the request was successful.
+     * 	[NetworkResult.Failure] with a [NetworkError] if the request failed.
      */
     public suspend fun getSubItem(
         itemId: String,
         subItemId: String,
-    ): GetSubItemResult {
+    ): NetworkResult<Item> {
         val url = """/items/$itemId/subitems/$subItemId"""
 
-        val response =
-            httpClient.`get`(url) {
-                `header`("Accept", "application/json")
+        return try {
+            val response =
+                httpClient.`get`(url) {
+                    `header`("Accept", "application/json")
+                }
+
+            if (response.status.isSuccess()) {
+                NetworkResult.Success(response.body())
+            } else {
+                val errorText = response.bodyAsText()
+                NetworkResult.Failure(
+                    NetworkError.Http(
+                        statusCode = response.status.value,
+                        message =
+                            errorText.ifBlank { response.status.description },
+                    ),
+                )
             }
-        return if (response.status.isSuccess()) {
-            GetSubItemResult.Success(response.body(), response)
-        } else {
-            GetSubItemResult.Failure(response)
+        } catch (e: ResponseException) {
+            val status = e.response.status
+            val msg = runCatching { e.response.bodyAsText() }.getOrNull()
+            NetworkResult.Failure(NetworkError.Http(status.value, msg))
+        } catch (e: IOException) {
+            NetworkResult.Failure(NetworkError.Network(e))
+        } catch (e: SerializationException) {
+            NetworkResult.Failure(NetworkError.Serialization(e))
+        } catch (e: ContentConvertException) {
+            NetworkResult.Failure(NetworkError.Serialization(e))
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            NetworkResult.Failure(NetworkError.Unknown)
         }
-    }
-
-    public sealed class GetSubItemResult {
-        public data class Success(
-            public val `data`: Item,
-            public val response: HttpResponse,
-        ) : GetSubItemResult()
-
-        public data class Failure(
-            public val response: HttpResponse,
-        ) : GetSubItemResult()
     }
 }
 
@@ -188,7 +236,9 @@ public class CatalogsSearchClient(
      * 	 @param xTracingID Unique identifier for the tracing
      *
      * Returns:
-     * 	[kotlin.collections.List<examples.ktorClient.models.Item>] if the request was successful.
+     * 	[NetworkResult.Success] with [kotlin.collections.List<examples.ktorClient.models.Item>] if the
+     * request was successful.
+     * 	[NetworkResult.Failure] with a [NetworkError] if the request failed.
      */
     public suspend fun searchCatalogItems(
         catalogId: String,
@@ -197,7 +247,7 @@ public class CatalogsSearchClient(
         sort: SortOrder? = null,
         listParam: List<String>? = null,
         xTracingID: String? = null,
-    ): SearchCatalogItemsResult {
+    ): NetworkResult<List<Item>> {
         val url =
             buildString {
                 append("""/catalogs/$catalogId/search""")
@@ -211,27 +261,40 @@ public class CatalogsSearchClient(
                 if (params.isNotEmpty()) append("?").append(params.joinToString("&"))
             }
 
-        val response =
-            httpClient.`get`(url) {
-                `header`("Accept", "application/json")
-                `header`("X-Tracing-ID", xTracingID)
+        return try {
+            val response =
+                httpClient.`get`(url) {
+                    `header`("Accept", "application/json")
+                    `header`("X-Tracing-ID", xTracingID)
+                }
+
+            if (response.status.isSuccess()) {
+                NetworkResult.Success(response.body())
+            } else {
+                val errorText = response.bodyAsText()
+                NetworkResult.Failure(
+                    NetworkError.Http(
+                        statusCode = response.status.value,
+                        message =
+                            errorText.ifBlank { response.status.description },
+                    ),
+                )
             }
-        return if (response.status.isSuccess()) {
-            SearchCatalogItemsResult.Success(response.body(), response)
-        } else {
-            SearchCatalogItemsResult.Failure(response)
+        } catch (e: ResponseException) {
+            val status = e.response.status
+            val msg = runCatching { e.response.bodyAsText() }.getOrNull()
+            NetworkResult.Failure(NetworkError.Http(status.value, msg))
+        } catch (e: IOException) {
+            NetworkResult.Failure(NetworkError.Network(e))
+        } catch (e: SerializationException) {
+            NetworkResult.Failure(NetworkError.Serialization(e))
+        } catch (e: ContentConvertException) {
+            NetworkResult.Failure(NetworkError.Serialization(e))
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            NetworkResult.Failure(NetworkError.Unknown)
         }
-    }
-
-    public sealed class SearchCatalogItemsResult {
-        public data class Success(
-            public val `data`: List<Item>,
-            public val response: HttpResponse,
-        ) : SearchCatalogItemsResult()
-
-        public data class Failure(
-            public val response: HttpResponse,
-        ) : SearchCatalogItemsResult()
     }
 }
 
@@ -246,22 +309,47 @@ public class CatalogsItemsAvailabilityClient(
      * 	 @param itemId The ID of the item
      *
      * Returns:
-     * 	[kotlin.Unit] if the request was successful.
+     * 	[NetworkResult.Success] with [kotlin.Unit] if the request was successful.
+     * 	[NetworkResult.Failure] with a [NetworkError] if the request failed.
      */
     public suspend fun getByCatalogIdAndItemId(
         catalogId: String,
         itemId: String,
-    ): GetByCatalogIdAndItemIdResult {
+    ): NetworkResult<Unit> {
         val url = """/catalogs/$catalogId/items/$itemId/availability"""
 
-        val response =
-            httpClient.`get`(url) {
-                `header`("Accept", "application/json")
+        return try {
+            val response =
+                httpClient.`get`(url) {
+                    `header`("Accept", "application/json")
+                }
+
+            if (response.status.isSuccess()) {
+                NetworkResult.Success(response.body())
+            } else {
+                val errorText = response.bodyAsText()
+                NetworkResult.Failure(
+                    NetworkError.Http(
+                        statusCode = response.status.value,
+                        message =
+                            errorText.ifBlank { response.status.description },
+                    ),
+                )
             }
-        return if (response.status.isSuccess()) {
-            GetByCatalogIdAndItemIdResult.Success(response.body(), response)
-        } else {
-            GetByCatalogIdAndItemIdResult.Failure(response)
+        } catch (e: ResponseException) {
+            val status = e.response.status
+            val msg = runCatching { e.response.bodyAsText() }.getOrNull()
+            NetworkResult.Failure(NetworkError.Http(status.value, msg))
+        } catch (e: IOException) {
+            NetworkResult.Failure(NetworkError.Network(e))
+        } catch (e: SerializationException) {
+            NetworkResult.Failure(NetworkError.Serialization(e))
+        } catch (e: ContentConvertException) {
+            NetworkResult.Failure(NetworkError.Serialization(e))
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            NetworkResult.Failure(NetworkError.Unknown)
         }
     }
 
@@ -273,45 +361,48 @@ public class CatalogsItemsAvailabilityClient(
      * 	 @param itemId The ID of the item
      *
      * Returns:
-     * 	[kotlin.Unit] if the request was successful.
+     * 	[NetworkResult.Success] with [kotlin.Unit] if the request was successful.
+     * 	[NetworkResult.Failure] with a [NetworkError] if the request failed.
      */
     public suspend fun putByCatalogIdAndItemId(
         catalogId: String,
         itemId: String,
-    ): PutByCatalogIdAndItemIdResult {
+    ): NetworkResult<Unit> {
         val url = """/catalogs/$catalogId/items/$itemId/availability"""
 
-        val response =
-            httpClient.put(url) {
-                `header`("Accept", "application/json")
+        return try {
+            val response =
+                httpClient.put(url) {
+                    `header`("Accept", "application/json")
+                }
+
+            if (response.status.isSuccess()) {
+                NetworkResult.Success(response.body())
+            } else {
+                val errorText = response.bodyAsText()
+                NetworkResult.Failure(
+                    NetworkError.Http(
+                        statusCode = response.status.value,
+                        message =
+                            errorText.ifBlank { response.status.description },
+                    ),
+                )
             }
-        return if (response.status.isSuccess()) {
-            PutByCatalogIdAndItemIdResult.Success(response.body(), response)
-        } else {
-            PutByCatalogIdAndItemIdResult.Failure(response)
+        } catch (e: ResponseException) {
+            val status = e.response.status
+            val msg = runCatching { e.response.bodyAsText() }.getOrNull()
+            NetworkResult.Failure(NetworkError.Http(status.value, msg))
+        } catch (e: IOException) {
+            NetworkResult.Failure(NetworkError.Network(e))
+        } catch (e: SerializationException) {
+            NetworkResult.Failure(NetworkError.Serialization(e))
+        } catch (e: ContentConvertException) {
+            NetworkResult.Failure(NetworkError.Serialization(e))
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            NetworkResult.Failure(NetworkError.Unknown)
         }
-    }
-
-    public sealed class GetByCatalogIdAndItemIdResult {
-        public data class Success(
-            public val `data`: Unit,
-            public val response: HttpResponse,
-        ) : GetByCatalogIdAndItemIdResult()
-
-        public data class Failure(
-            public val response: HttpResponse,
-        ) : GetByCatalogIdAndItemIdResult()
-    }
-
-    public sealed class PutByCatalogIdAndItemIdResult {
-        public data class Success(
-            public val `data`: Unit,
-            public val response: HttpResponse,
-        ) : PutByCatalogIdAndItemIdResult()
-
-        public data class Failure(
-            public val response: HttpResponse,
-        ) : PutByCatalogIdAndItemIdResult()
     }
 }
 
@@ -323,31 +414,45 @@ public class UptimeClient(
      *
      *
      * Returns:
-     * 	[kotlin.String] if the request was successful.
+     * 	[NetworkResult.Success] with [kotlin.String] if the request was successful.
+     * 	[NetworkResult.Failure] with a [NetworkError] if the request failed.
      */
-    public suspend fun `get_System-Uptime`(): `Get_System-UptimeResult` {
+    public suspend fun `get_System-Uptime`(): NetworkResult<String> {
         val url = """/uptime"""
 
-        val response =
-            httpClient.`get`(url) {
-                `header`("Accept", "application/json")
+        return try {
+            val response =
+                httpClient.`get`(url) {
+                    `header`("Accept", "application/json")
+                }
+
+            if (response.status.isSuccess()) {
+                NetworkResult.Success(response.body())
+            } else {
+                val errorText = response.bodyAsText()
+                NetworkResult.Failure(
+                    NetworkError.Http(
+                        statusCode = response.status.value,
+                        message =
+                            errorText.ifBlank { response.status.description },
+                    ),
+                )
             }
-        return if (response.status.isSuccess()) {
-            `Get_System-UptimeResult`.Success(response.body(), response)
-        } else {
-            `Get_System-UptimeResult`.Failure(response)
+        } catch (e: ResponseException) {
+            val status = e.response.status
+            val msg = runCatching { e.response.bodyAsText() }.getOrNull()
+            NetworkResult.Failure(NetworkError.Http(status.value, msg))
+        } catch (e: IOException) {
+            NetworkResult.Failure(NetworkError.Network(e))
+        } catch (e: SerializationException) {
+            NetworkResult.Failure(NetworkError.Serialization(e))
+        } catch (e: ContentConvertException) {
+            NetworkResult.Failure(NetworkError.Serialization(e))
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            NetworkResult.Failure(NetworkError.Unknown)
         }
-    }
-
-    public sealed class `Get_System-UptimeResult` {
-        public data class Success(
-            public val `data`: String,
-            public val response: HttpResponse,
-        ) : `Get_System-UptimeResult`()
-
-        public data class Failure(
-            public val response: HttpResponse,
-        ) : `Get_System-UptimeResult`()
     }
 }
 
@@ -359,30 +464,44 @@ public class NoContentClient(
      *
      *
      * Returns:
-     * 	[kotlin.Unit] if the request was successful.
+     * 	[NetworkResult.Success] with [kotlin.Unit] if the request was successful.
+     * 	[NetworkResult.Failure] with a [NetworkError] if the request failed.
      */
-    public suspend fun getNoContent(): GetNoContentResult {
+    public suspend fun getNoContent(): NetworkResult<Unit> {
         val url = """/no-content"""
 
-        val response =
-            httpClient.`get`(url) {
-                `header`("Accept", "application/json")
+        return try {
+            val response =
+                httpClient.`get`(url) {
+                    `header`("Accept", "application/json")
+                }
+
+            if (response.status.isSuccess()) {
+                NetworkResult.Success(response.body())
+            } else {
+                val errorText = response.bodyAsText()
+                NetworkResult.Failure(
+                    NetworkError.Http(
+                        statusCode = response.status.value,
+                        message =
+                            errorText.ifBlank { response.status.description },
+                    ),
+                )
             }
-        return if (response.status.isSuccess()) {
-            GetNoContentResult.Success(response.body(), response)
-        } else {
-            GetNoContentResult.Failure(response)
+        } catch (e: ResponseException) {
+            val status = e.response.status
+            val msg = runCatching { e.response.bodyAsText() }.getOrNull()
+            NetworkResult.Failure(NetworkError.Http(status.value, msg))
+        } catch (e: IOException) {
+            NetworkResult.Failure(NetworkError.Network(e))
+        } catch (e: SerializationException) {
+            NetworkResult.Failure(NetworkError.Serialization(e))
+        } catch (e: ContentConvertException) {
+            NetworkResult.Failure(NetworkError.Serialization(e))
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            NetworkResult.Failure(NetworkError.Unknown)
         }
-    }
-
-    public sealed class GetNoContentResult {
-        public data class Success(
-            public val `data`: Unit,
-            public val response: HttpResponse,
-        ) : GetNoContentResult()
-
-        public data class Failure(
-            public val response: HttpResponse,
-        ) : GetNoContentResult()
     }
 }
