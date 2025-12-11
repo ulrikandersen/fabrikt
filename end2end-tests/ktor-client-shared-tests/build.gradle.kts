@@ -1,30 +1,34 @@
 plugins {
     kotlin("jvm")
+    `java-test-fixtures`
 }
 
 val ktorVersion: String by rootProject.extra
-val kotlinxDateTimeVersion: String by rootProject.extra
 val junitVersion: String by rootProject.extra
 
 dependencies {
-    implementation("io.ktor:ktor-client-core:$ktorVersion")
-    implementation("io.ktor:ktor-client-cio:$ktorVersion")
-    implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
-    implementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
-    implementation("org.jetbrains.kotlinx:kotlinx-datetime:$kotlinxDateTimeVersion")
-
-    testImplementation(testFixtures(project(":end2end-tests:ktor-client-shared-tests")))
-    testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
-    testImplementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
-    testImplementation(kotlin("test"))
+    testFixturesApi("io.ktor:ktor-client-core:$ktorVersion")
+    testFixturesApi("io.ktor:ktor-client-cio:$ktorVersion")
+    testFixturesApi("io.ktor:ktor-client-content-negotiation:$ktorVersion")
+    testFixturesApi("io.ktor:ktor-server-test-host:$ktorVersion")
+    testFixturesApi("io.ktor:ktor-server-content-negotiation:$ktorVersion")
+    testFixturesApi("io.mockk:mockk:1.13.7")
+    testFixturesApi("org.junit.jupiter:junit-jupiter-api:$junitVersion")
+    testFixturesApi("org.wiremock:wiremock:3.3.1")
+    testFixturesApi("com.marcinziolo:kotlin-wiremock:2.1.1")
+    testFixturesApi(kotlin("test"))
 }
 
 val generationDir = layout.buildDirectory.dir("generated")
 
 sourceSets {
-    main { java.srcDirs(generationDir.map { it.dir("src/main/kotlin") }) }
-    test { java.srcDirs(generationDir.map { it.dir("src/test/kotlin") }) }
+    testFixtures {
+        java.srcDirs(
+            "src/testFixtures/kotlin",
+            generationDir.map { it.dir("src/main/kotlin") },
+            generationDir.map { it.dir("src/test/kotlin") }
+        )
+    }
 }
 
 val generateCode by tasks.registering(JavaExec::class) {
@@ -47,6 +51,6 @@ val generateCode by tasks.registering(JavaExec::class) {
     dependsOn(":jar", ":shadowJar")
 }
 
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+tasks.named("compileTestFixturesKotlin") {
     dependsOn(generateCode)
 }
