@@ -2,6 +2,8 @@ package com.cjbooms.fabrikt.clients
 
 import com.example.client.CatalogsItemsClient
 import com.example.client.CatalogsSearchClient
+import com.example.client.NetworkError
+import com.example.client.NetworkResult
 import com.example.models.Item
 import com.example.models.SortOrder
 import com.github.tomakehurst.wiremock.WireMockServer
@@ -14,7 +16,6 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
-import io.ktor.client.statement.bodyAsText
 import io.ktor.serialization.jackson.jackson
 import io.ktor.server.response.respond
 import io.ktor.server.routing.get
@@ -90,12 +91,12 @@ class KtorClientJacksonTest {
                 )
 
                 when (result) {
-                    is CatalogsItemsClient.CreateItemResult.Success -> {
-                        println("Created item with name: ${result.data.name}. Status code: ${result.response.status}")
+                    is NetworkResult.Success -> {
+                        println("Created item with name: ${result.data.name}")
                     }
 
-                    is CatalogsItemsClient.CreateItemResult.Failure -> {
-                        fail("Failed to create item.\nStatus code: ${result.response.status}\nBody: ${result.response.bodyAsText()}")
+                    is NetworkResult.Failure -> {
+                        fail("Failed to create item. Error: ${result.error}")
                     }
                 }
             }
@@ -126,12 +127,15 @@ class KtorClientJacksonTest {
                 )
 
                 when (result) {
-                    is CatalogsItemsClient.CreateItemResult.Success -> {
+                    is NetworkResult.Success -> {
                         fail("Expected 404 but got success")
                     }
 
-                    is CatalogsItemsClient.CreateItemResult.Failure -> {
-                        println("Failed to create item. Status code: ${result.response.status}")
+                    is NetworkResult.Failure -> {
+                        val error = result.error
+                        assertInstanceOf<NetworkError.Http>(error)
+                        assertEquals(404, error.statusCode)
+                        println("Failed to create item. Status code: ${error.statusCode}, message: ${error.message}")
                     }
                 }
             }
@@ -190,7 +194,7 @@ class KtorClientJacksonTest {
                     xTracingID = "request-id-123"
                 )
 
-                assertInstanceOf<CatalogsSearchClient.SearchCatalogItemsResult.Success>(response)
+                assertInstanceOf<NetworkResult.Success<*>>(response)
                 assertEquals("catalog-a", capturedCatalogId.captured)
                 assertEquals("query", capturedQuery.captured)
                 assertEquals("10", capturedPage.captured)

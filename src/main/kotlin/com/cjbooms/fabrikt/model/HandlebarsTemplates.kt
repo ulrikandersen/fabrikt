@@ -26,6 +26,7 @@ object HandlebarsTemplates {
     val clientOAuth = handlebars.compile("/templates/client-code/oauth.kt")!!
     val clientHttpUtils = handlebars.compile("/templates/client-code/http-util.kt")!!
     val clientHttpResilience4jUtils = handlebars.compile("/templates/client-code/http-resilience4j-util.kt")!!
+    val ktorClientApiModels = handlebars.compile("/templates/client-code/ktor-api-models.kt")!!
 
     fun applyTemplate(
         template: Template,
