@@ -1,7 +1,10 @@
 package com.cjbooms.fabrikt.clients
 
+import com.example.client.CatalogsItemsAvailabilityClient
 import com.example.client.CatalogsItemsClient
 import com.example.client.CatalogsSearchClient
+import com.example.client.ItemsClient
+import com.example.client.ItemsSubitemsClient
 import com.example.client.NetworkError
 import com.example.client.NetworkResult
 import com.example.client.NoContentClient
@@ -10,9 +13,11 @@ import com.example.models.SortOrder
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.common.ConsoleNotifier
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
+import com.marcinziolo.kotlin.wiremock.equalTo
 import com.marcinziolo.kotlin.wiremock.get
 import com.marcinziolo.kotlin.wiremock.like
 import com.marcinziolo.kotlin.wiremock.post
+import com.marcinziolo.kotlin.wiremock.put
 import com.marcinziolo.kotlin.wiremock.returns
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
@@ -32,6 +37,9 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.assertInstanceOf
 import java.net.ServerSocket
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlin.test.fail
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -226,7 +234,7 @@ abstract class KtorClientTestBase {
                 )
 
                 assertInstanceOf<NetworkResult.Failure>(result)
-                assertInstanceOf<NetworkError.Http>((result as NetworkResult.Failure).error)
+                assertInstanceOf<NetworkError.Http>(result.error)
                 assertEquals(302, (result.error as NetworkError.Http).statusCode)
             }
         }
@@ -263,7 +271,7 @@ abstract class KtorClientTestBase {
                 .searchCatalogItems(catalogId = "catalog-a", query = "query")
 
             assertInstanceOf<NetworkResult.Failure>(result)
-            assertInstanceOf<NetworkError.Unknown>((result as NetworkResult.Failure).error)
+            assertInstanceOf<NetworkError.Unknown>(result.error)
         }
     }
 
@@ -283,7 +291,7 @@ abstract class KtorClientTestBase {
         }
 
         assertInstanceOf<NetworkResult.Failure>(result)
-        assertInstanceOf<NetworkError.Serialization>((result as NetworkResult.Failure).error)
+        assertInstanceOf<NetworkError.Serialization>(result.error)
     }
 
     @Test
@@ -302,6 +310,166 @@ abstract class KtorClientTestBase {
         }
 
         assertInstanceOf<NetworkResult.Failure>(result)
-        assertInstanceOf<NetworkError.Serialization>((result as NetworkResult.Failure).error)
+        assertInstanceOf<NetworkError.Serialization>(result.error)
+    }
+
+    @Test
+    fun `connection failure returns NetworkError_Network`() {
+        val clientWithBadPort = HttpClient(CIO) {
+            install(ContentNegotiation) { configureSerializer() }
+            defaultRequest { url("http://localhost:1") } // Port 1 should refuse connections
+        }
+
+        val result = runBlocking {
+            ItemsClient(clientWithBadPort).getItems()
+        }
+
+        assertInstanceOf<NetworkResult.Failure>(result)
+        assertInstanceOf<NetworkError.Network>(result.error)
+    }
+
+    @Test
+    fun `GET with optional query params sends correct request`() = runBlocking {
+        val capturedCategory = slot<String?>()
+        val capturedLimit = slot<String?>()
+        val capturedPriceLimit = slot<String?>()
+
+        testApplication {
+            routing {
+                get("/items") {
+                    capturedCategory.captured = call.request.queryParameters["category"]
+                    capturedLimit.captured = call.request.queryParameters["limit"]
+                    capturedPriceLimit.captured = call.request.queryParameters["priceLimit"]
+
+                    call.response.headers.append("Content-Type", "application/json")
+                    call.respond("""[{"id": "id-1", "name": "item-a", "price": 10.0}]""")
+                }
+            }
+
+            val response = ItemsClient(createTestClient()).getItems(
+                category = "electronics",
+                limit = 25,
+                priceLimit = 99.99
+            )
+
+            assertInstanceOf<NetworkResult.Success<*>>(response)
+            assertEquals("electronics", capturedCategory.captured)
+            assertEquals("25", capturedLimit.captured)
+            assertEquals("99.99", capturedPriceLimit.captured)
+        }
+    }
+
+    @Test
+    fun `GET with multiple path params sends correct request`() = runBlocking {
+        val capturedItemId = slot<String?>()
+        val capturedSubItemId = slot<String?>()
+
+        testApplication {
+            routing {
+                get("/items/{itemId}/subitems/{subItemId}") {
+                    capturedItemId.captured = call.parameters["itemId"]
+                    capturedSubItemId.captured = call.parameters["subItemId"]
+
+                    call.response.headers.append("Content-Type", "application/json")
+                    call.respond("""{"id": "sub-1", "name": "subitem", "price": 5.0}""")
+                }
+            }
+
+            val response = ItemsSubitemsClient(createTestClient()).getSubItem(
+                itemId = "item-123",
+                subItemId = "sub-456"
+            )
+
+            assertInstanceOf<NetworkResult.Success<*>>(response)
+            assertEquals("item-123", capturedItemId.captured)
+            assertEquals("sub-456", capturedSubItemId.captured)
+        }
+    }
+
+    @Test
+    fun `PUT request returns Success on 204`() {
+        wiremock.put {
+            urlPath like "/catalogs/catalog-a/items/item-1/availability"
+        } returns {
+            statusCode = 204
+        }
+
+        val result = runBlocking {
+            CatalogsItemsAvailabilityClient(createHttpClient()).putByCatalogIdAndItemId(
+                catalogId = "catalog-a",
+                itemId = "item-1"
+            )
+        }
+
+        assertInstanceOf<NetworkResult.Success<*>>(result)
+        assertEquals(Unit, (result as NetworkResult.Success).data)
+    }
+
+    @Test
+    fun `5xx server error returns NetworkError_Http`() {
+        wiremock.get {
+            urlPath like "/items"
+        } returns {
+            statusCode = 503
+            body = "Service Unavailable"
+            header = "Content-Type" to "text/plain"
+        }
+
+        val result = runBlocking {
+            ItemsClient(createHttpClient()).getItems()
+        }
+
+        assertInstanceOf<NetworkResult.Failure>(result)
+        assertInstanceOf<NetworkError.Http>(result.error)
+        assertEquals(503, result.error.statusCode)
+    }
+
+    @Test
+    fun `HTTP error captures response body in message`() {
+        val errorBody = """{"error": "Item not found", "code": "ITEM_NOT_FOUND"}"""
+        wiremock.get {
+            urlPath like "/items/item-123/subitems/sub-456"
+        } returns {
+            statusCode = 404
+            body = errorBody
+            header = "Content-Type" to "application/json"
+        }
+
+        val result = runBlocking {
+            ItemsSubitemsClient(createHttpClient()).getSubItem(
+                itemId = "item-123",
+                subItemId = "sub-456"
+            )
+        }
+
+        assertInstanceOf<NetworkResult.Failure>(result)
+        assertInstanceOf<NetworkError.Http>(result.error)
+        assertEquals(404, result.error.statusCode)
+        assertEquals(errorBody, result.error.message)
+    }
+
+    @Test
+    fun `optional header is not sent when null`() = runBlocking {
+        val capturedXTracingID = slot<String?>()
+
+        testApplication {
+            routing {
+                get("/catalogs/{catalogId}/search") {
+                    capturedXTracingID.captured = call.request.headers["X-Tracing-ID"]
+
+                    call.response.headers.append("Content-Type", "application/json")
+                    call.respond("""[]""")
+                }
+            }
+
+            val response = CatalogsSearchClient(createTestClient()).searchCatalogItems(
+                catalogId = "catalog-a",
+                query = "query",
+                xTracingID = null
+            )
+
+            assertInstanceOf<NetworkResult.Success<*>>(response)
+            assertNull(capturedXTracingID.captured)
+        }
     }
 }

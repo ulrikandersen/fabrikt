@@ -50,3 +50,7 @@ val generateCode by tasks.registering(JavaExec::class) {
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     dependsOn(generateCode)
 }
+
+tasks.withType<Test> {
+    useJUnitPlatform()
+}

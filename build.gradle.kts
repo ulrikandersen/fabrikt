@@ -38,26 +38,6 @@ allprojects {
     }
 }
 
-subprojects {
-    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-        compilerOptions {
-            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
-        }
-    }
-
-    tasks.withType<Test> {
-        useJUnitPlatform()
-        jvmArgs = listOf("--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED")
-    }
-
-    pluginManager.withPlugin("java") {
-        configure<JavaPluginExtension> {
-            sourceCompatibility = JavaVersion.VERSION_17
-            targetCompatibility = JavaVersion.VERSION_17
-        }
-    }
-}
-
 val jacksonVersion by extra { "2.20.1" }
 val junitVersion by extra { "5.9.2" }
 val ktorVersion by extra { "3.0.1" }
