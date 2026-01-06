@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test
 class StringFormatTest {
     private val objectMapper: ObjectMapper = ObjectMapper()
         .registerModule(KotlinModule.Builder().build())
-        .setSerializationInclusion(JsonInclude.Include.NON_NULL)
+        .setDefaultPropertyInclusion(JsonInclude.Value.construct(JsonInclude.Include.NON_NULL, null))
 
     private val content = Content(
         string = "example",

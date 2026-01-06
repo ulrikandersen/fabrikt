@@ -32,7 +32,7 @@ object OpenApi31Downgrader {
                         put("nullable", true)
                     })
                 }
-                objectNode.fields().forEach { (_, value) -> fillMissingArrayItems(value) }
+                objectNode.properties().forEach { (_, value) -> fillMissingArrayItems(value) }
             }
             node.isArray -> node.forEach { fillMissingArrayItems(it) }
         }
@@ -57,7 +57,7 @@ object OpenApi31Downgrader {
         when {
             node.isObject -> {
                 val objectNode = node as ObjectNode
-                val fieldsToProcess = objectNode.fields().asSequence().toList()
+                val fieldsToProcess = objectNode.properties().toList()
                 var requiresNullable = false
 
                 for ((key, value) in fieldsToProcess) {

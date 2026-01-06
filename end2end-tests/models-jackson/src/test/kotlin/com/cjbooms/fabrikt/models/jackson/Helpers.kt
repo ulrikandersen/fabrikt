@@ -9,7 +9,10 @@ import com.fasterxml.jackson.module.kotlin.KotlinModule
 object Helpers {
     fun mapper(): ObjectMapper {
         val kotlinModule = KotlinModule.Builder().enable(KotlinFeature.NullIsSameAsDefault).build()
-        return JsonMapper.builder().addModule(kotlinModule).serializationInclusion(JsonInclude.Include.NON_NULL).build()
+        return JsonMapper.builder()
+            .addModule(kotlinModule)
+            .defaultPropertyInclusion(JsonInclude.Value.construct(JsonInclude.Include.NON_NULL, null))
+            .build()
     }
 
 }

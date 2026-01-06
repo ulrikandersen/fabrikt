@@ -6,7 +6,6 @@ import com.cjbooms.fabrikt.util.KaizenParserExtensions.safeName
 import com.cjbooms.fabrikt.util.NormalisedString.toModelClassName
 import com.reprezen.jsonoverlay.Overlay
 import com.reprezen.kaizen.oasparser.model3.Schema
-import java.net.URL
 
 /**
  * Model name registry to avoid name collisions
@@ -72,8 +71,14 @@ object ModelNameRegistry {
 
     private fun resolveTag(schema: Schema, modelClassName: String): String {
         val overlay = Overlay.of(schema)
-        val uri = URL(overlay.jsonReference)
-        return "file:${uri.file}#$modelClassName"
+        val jsonRef = overlay.jsonReference
+        // Extract file path: remove protocol prefix and fragment (JSON refs can contain
+        // characters like {} that are illegal in URI fragments)
+        val filePath = jsonRef
+            .removePrefix("file://")
+            .removePrefix("file:")
+            .substringBefore("#")
+        return "file:$filePath#$modelClassName"
     }
 
     /** Retrieve a model class name created with [ModelNameRegistry.register]. */

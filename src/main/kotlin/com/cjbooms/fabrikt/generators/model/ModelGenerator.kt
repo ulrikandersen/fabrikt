@@ -67,6 +67,7 @@ import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asTypeName
 import java.io.Serializable
 import java.net.MalformedURLException
+import java.net.URI
 import java.net.URL
 import java.util.logging.Logger
 
@@ -175,7 +176,7 @@ class ModelGenerator(
     fun generate(): Models {
         val models: MutableSet<TypeSpec> = createModels(sourceApi.openApi3, sourceApi.allSchemas)
         externalApiSchemas.forEach { externalReferences ->
-            val api = OpenApi3Parser().parse(URL(externalReferences.key))
+            val api = OpenApi3Parser().parse(URI(externalReferences.key).toURL())
             val schemas = api.schemas.entries.map { (key, schema) -> SchemaInfo(key, schema) }
                 .filterByExternalRefResolutionMode(externalReferences)
             val externalModels = createModels(api, schemas)

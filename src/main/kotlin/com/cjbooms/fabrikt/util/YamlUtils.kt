@@ -71,7 +71,7 @@ object YamlUtils {
         when {
             node.isObject -> {
                 val objectNode = node as ObjectNode
-                val fieldsToProcess = objectNode.fields().asSequence().toList()
+                val fieldsToProcess = objectNode.properties().toList()
 
                 for ((key, value) in fieldsToProcess) {
                     if (key == "type" && (value.isNull || (value.isTextual && value.asText().isBlank()))) {
