@@ -10,7 +10,10 @@ public data class ErrorResponse(
   @get:JsonProperty("message")
   @get:NotNull
   public val message: String,
-  @param:JsonProperty("code")
+  @param:JsonProperty(
+    "code",
+    required = true,
+  )
   @get:JsonProperty("code")
   @get:NotNull
   public val code: Int,

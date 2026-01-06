@@ -16,7 +16,10 @@ public data class ValidationAnnotations(
   @get:NotNull
   @get:Pattern(regexp = "[a-zA-Z]")
   public val userName: String,
-  @param:JsonProperty("age")
+  @param:JsonProperty(
+    "age",
+    required = true,
+  )
   @get:JsonProperty("age")
   @get:NotNull
   @get:DecimalMin(

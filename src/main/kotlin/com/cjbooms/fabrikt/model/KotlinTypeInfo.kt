@@ -74,6 +74,12 @@ sealed class KotlinTypeInfo(val modelKClass: KClass<*>, val generatedModelClassN
             else -> false
         }
 
+    val isPrimitiveType: kotlin.Boolean
+        get() = when (this) {
+            is Integer, is BigInt, is Double, is Float, is Boolean -> true
+            else -> false
+        }
+
     companion object {
         private val logger = Logger.getGlobal()
 
