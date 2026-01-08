@@ -9,12 +9,15 @@ import com.cjbooms.fabrikt.generators.client.ClientGenerator
 import com.cjbooms.fabrikt.generators.controller.ControllerGeneratorUtils.happyPathResponse
 import com.cjbooms.fabrikt.model.ClientType
 import com.cjbooms.fabrikt.model.Clients
+import com.cjbooms.fabrikt.model.Destinations
 import com.cjbooms.fabrikt.model.GeneratedFile
+import com.cjbooms.fabrikt.model.HandlebarsTemplates
 import com.cjbooms.fabrikt.model.IncomingParameter
 import com.cjbooms.fabrikt.model.KotlinTypeInfo
 import com.cjbooms.fabrikt.model.RequestParameter
 import com.cjbooms.fabrikt.model.SourceApi
 import com.cjbooms.fabrikt.util.KaizenParserExtensions.routeToPaths
+import com.github.javaparser.utils.CodeGenerationUtils
 import com.reprezen.kaizen.oasparser.model3.Operation
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
@@ -22,18 +25,26 @@ import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.ParameterSpec
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
+import java.nio.file.Path
 
 class KtorClientGenerator(
     private val packages: Packages,
     private val api: SourceApi,
+    private val srcPath: Path = Destinations.MAIN_KT_SOURCE,
 ) : ClientGenerator {
+
+    private val networkResultClassName = ClassName(packages.client, "NetworkResult")
+    private val networkErrorClassName = ClassName(packages.client, "NetworkError")
+
     override fun generate(options: Set<ClientCodeGenOptionType>): Clients {
         val resources: List<TypeSpec> = api.openApi3.routeToPaths().flatMap { (resourceName, paths) ->
             val clientClassBuilder = TypeSpec.classBuilder(resourceName + "Client")
                 .addProperty(
                     PropertySpec.builder("httpClient", ClassName("io.ktor.client", "HttpClient"))
+                        .addModifiers(KModifier.PRIVATE)
                         .initializer("httpClient")
                         .build()
                 )
@@ -51,53 +62,13 @@ class KtorClientGenerator(
 
                     val (pathParams, queryParams, headerParams, bodyParams) = params.splitByType()
 
-                    // build result sealed class
-                    val resultClassBuilder = TypeSpec.classBuilder(resultClassName(operation, verb, pathParams))
-                        .addModifiers(KModifier.SEALED)
-                    // add success and failure types
-                    resultClassBuilder.addType(
-                        TypeSpec.classBuilder("Success")
-                            .addModifiers(KModifier.DATA)
-                            .addProperty(
-                                PropertySpec.builder("data", operation.happyPathResponse(packages.base))
-                                    .initializer("data")
-                                    .build()
-                            )
-                            .addProperty(
-                                PropertySpec.builder("response", ClassName("io.ktor.client.statement", "HttpResponse"))
-                                    .initializer("response")
-                                    .build()
-                            )
-                            .primaryConstructor(
-                                FunSpec.constructorBuilder()
-                                    .addParameter("data", operation.happyPathResponse(packages.base))
-                                    .addParameter("response", ClassName("io.ktor.client.statement", "HttpResponse"))
-                                    .build()
-                            )
-                            .superclass(ClassName("", resultClassName(operation, verb, pathParams)))
-                            .build()
-                    )
-                        .addType(
-                            TypeSpec.classBuilder("Failure")
-                                .addModifiers(KModifier.DATA)
-                                .addProperty(
-                                    PropertySpec.builder("response", ClassName("io.ktor.client.statement", "HttpResponse"))
-                                        .initializer("response")
-                                        .build()
-                                )
-                                .primaryConstructor(
-                                    FunSpec.constructorBuilder()
-                                        .addParameter("response", ClassName("io.ktor.client.statement", "HttpResponse"))
-                                        .build()
-                                )
-                                .superclass(ClassName("", resultClassName(operation, verb, pathParams)))
-                                .build()
-                        )
+                    val responseType = operation.happyPathResponse(packages.base)
+                    val returnType = networkResultClassName.parameterizedBy(responseType)
 
-                    // build client
+                    // build client function with NetworkResult<T> return type
                     val clientFunctionBuilder = FunSpec.builder(clientRequestFunctionName(operation, verb, pathParams))
                         .addModifiers(KModifier.SUSPEND)
-                        .returns(ClassName("", resultClassName(operation, verb, pathParams)))
+                        .returns(returnType)
                         .addCode(
                             CodeBlock.builder()
                                 .apply {
@@ -145,6 +116,8 @@ class KtorClientGenerator(
                                     }
                                 }
                                 .addStatement("")
+                                // Start try block
+                                .beginControlFlow("return try")
                                 .addStatement(
                                     "val response = httpClient.%M(url) {",
                                     MemberName("io.ktor.client.request", verb, isExtension = true)
@@ -177,29 +150,86 @@ class KtorClientGenerator(
                                 }
                                 .unindent()
                                 .addStatement("}")
-                                .addStatement(
-                                    "return if (response.status.%M()) {",
+                                .addStatement("")
+                                .beginControlFlow(
+                                    "if (response.status.%M())",
                                     MemberName("io.ktor.http", "isSuccess")
                                 )
-                                .indent()
-                                .apply {
-                                    addStatement(
-                                        "%M.Success(response.%M(), response)",
-                                        MemberName("", resultClassName(operation, verb, pathParams)),
-                                        MemberName("io.ktor.client.call", "body"),
-                                    )
-                                }
-                                .unindent()
-                                .addStatement("} else {")
-                                .indent()
-                                .apply {
-                                    addStatement(
-                                        "%T.Failure(response)",
-                                        ClassName("", resultClassName(operation, verb, pathParams))
-                                    )
-                                }
-                                .unindent()
-                                .addStatement("}")
+                                .addStatement(
+                                    "%T.Success(response.%M())",
+                                    networkResultClassName,
+                                    MemberName("io.ktor.client.call", "body"),
+                                )
+                                .nextControlFlow("else")
+                                .addStatement(
+                                    "val errorBody = response.%M().ifBlank { null }",
+                                    MemberName("io.ktor.client.statement", "bodyAsText")
+                                )
+                                .addStatement(
+                                    "%T.Failure(%T.Http(statusCode = response.status.value, statusDescription = response.status.description, body = errorBody))",
+                                    networkResultClassName,
+                                    networkErrorClassName
+                                )
+                                .endControlFlow()
+                                // Catch ResponseException
+                                .nextControlFlow(
+                                    "catch (e: %T)",
+                                    ClassName("io.ktor.client.plugins", "ResponseException")
+                                )
+                                .addStatement("val status = e.response.status")
+                                .addStatement(
+                                    "val body = runCatching { e.response.%M() }.getOrNull()?.ifBlank { null }",
+                                    MemberName("io.ktor.client.statement", "bodyAsText")
+                                )
+                                .addStatement(
+                                    "%T.Failure(%T.Http(status.value, status.description, body))",
+                                    networkResultClassName,
+                                    networkErrorClassName
+                                )
+                                // Catch IOException
+                                .nextControlFlow(
+                                    "catch (e: %T)",
+                                    ClassName("java.io", "IOException")
+                                )
+                                .addStatement(
+                                    "%T.Failure(%T.Network(e))",
+                                    networkResultClassName,
+                                    networkErrorClassName
+                                )
+                                // Catch ContentConvertException (thrown by Ktor's ContentNegotiation)
+                                .nextControlFlow(
+                                    "catch (e: %T)",
+                                    ClassName("io.ktor.serialization", "ContentConvertException")
+                                )
+                                .addStatement(
+                                    "%T.Failure(%T.Serialization(e))",
+                                    networkResultClassName,
+                                    networkErrorClassName
+                                )
+                                // Catch NoTransformationFoundException (wrong content type)
+                                .nextControlFlow(
+                                    "catch (e: %T)",
+                                    ClassName("io.ktor.client.call", "NoTransformationFoundException")
+                                )
+                                .addStatement(
+                                    "%T.Failure(%T.Serialization(e))",
+                                    networkResultClassName,
+                                    networkErrorClassName
+                                )
+                                // Catch CancellationException - rethrow
+                                .nextControlFlow(
+                                    "catch (e: %T)",
+                                    ClassName("kotlinx.coroutines", "CancellationException")
+                                )
+                                .addStatement("throw e")
+                                // Catch all other exceptions
+                                .nextControlFlow("catch (e: Exception)")
+                                .addStatement(
+                                    "%T.Failure(%T.Unknown(e))",
+                                    networkResultClassName,
+                                    networkErrorClassName
+                                )
+                                .endControlFlow()
                                 .build()
                         )
                     if (bodyParams.isNotEmpty()) {
@@ -219,7 +249,6 @@ class KtorClientGenerator(
 
                     clientFunctionBuilder.addKdoc(buildFunKdoc(operation, params))
 
-                    clientClassBuilder.addType(resultClassBuilder.build())
                     clientClassBuilder.addFunction(clientFunctionBuilder.build())
                 }
             }
@@ -231,18 +260,17 @@ class KtorClientGenerator(
     }
 
     override fun generateLibrary(options: Set<ClientCodeGenOptionType>): Collection<GeneratedFile> {
-        return emptyList()
+        val codeDir = srcPath.resolve(CodeGenerationUtils.packageToPath(packages.base))
+        val clientDir = codeDir.resolve("client")
+        return setOf(
+            HandlebarsTemplates.applyTemplate(
+                template = HandlebarsTemplates.ktorClientApiModels,
+                input = packages,
+                path = clientDir,
+                fileName = "KtorApiModels.kt"
+            )
+        )
     }
-
-    private fun resourceClassName(op: Operation, verb: String, params: List<RequestParameter>) =
-        if (op.operationId != null) {
-            op.operationId.replaceFirstChar { it.uppercase() }
-        } else {
-            buildString {
-                append(verb.replaceFirstChar { it.uppercase() })
-                append(if (params.isNotEmpty()) "By" + params.joinToString("And") { it -> it.name.replaceFirstChar { it.uppercase() } } else "")
-            }
-        }
 
     private fun clientRequestFunctionName(op: Operation, verb: String, params: List<RequestParameter>) =
         if (op.operationId != null) {
@@ -253,9 +281,6 @@ class KtorClientGenerator(
                 append(if (params.isNotEmpty()) "By" + params.joinToString("And") { it -> it.name.replaceFirstChar { it.uppercase() } } else "")
             }
         }
-
-    private fun resultClassName(op: Operation, verb: String, params: List<RequestParameter>) =
-        resourceClassName(op, verb, params) + "Result"
 
     private fun buildFunKdoc(operation: Operation, parameters: List<IncomingParameter>): CodeBlock {
         val (pathParams, queryParams, headerParams, bodyParams) = parameters.splitByType()
@@ -279,7 +304,8 @@ class KtorClientGenerator(
         // document response
         val happyPathResponse = operation.happyPathResponse(packages.base)
         kDoc.add("\nReturns:\n")
-        kDoc.add("\t[%L] if the request was successful.\n", happyPathResponse.toString())
+        kDoc.add("\t[NetworkResult.Success] with [%L] if the request was successful.\n", happyPathResponse.toString())
+        kDoc.add("\t[NetworkResult.Failure] with a [NetworkError] if the request failed.\n")
 
         return kDoc.build()
     }
