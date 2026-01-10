@@ -117,14 +117,14 @@ object PropertyUtils {
                             property.addModifiers(KModifier.OVERRIDE)
                             classBuilder.addSuperclassConstructorParameter(name)
                         }
-                        serializationAnnotations.addParameter(property, oasKey)
+                        serializationAnnotations.addParameter(property, oasKey, isRequired, typeInfo)
                     }
                     serializationAnnotations.addProperty(property, oasKey, typeInfo)
                     property.addValidationAnnotations(this, validationAnnotations)
                 }
 
                 ClassSettings.PolymorphyType.NONE -> {
-                    serializationAnnotations.addParameter(property, oasKey)
+                    serializationAnnotations.addParameter(property, oasKey, isRequired, typeInfo)
                     serializationAnnotations.addProperty(property, oasKey, typeInfo)
                     property.addValidationAnnotations(this, validationAnnotations)
                 }
@@ -142,7 +142,7 @@ object PropertyUtils {
                         return // Skip adding the property to the class
                     } else {
                         property.initializer(name)
-                        serializationAnnotations.addParameter(property, oasKey)
+                        serializationAnnotations.addParameter(property, oasKey, isRequired, typeInfo)
                         val constructorParameter: ParameterSpec.Builder = ParameterSpec.builder(name, wrappedType)
                         val discriminators = maybeDiscriminator.getDiscriminatorMappings(schemaName)
                         when (val discriminator = discriminators.first()) {

@@ -27,7 +27,10 @@ public data class ThirdLevelChild12(
   @get:NotNull
   @get:Valid
   override val metadata: SecondLevelMetadata,
-  @param:JsonProperty("isDeleted")
+  @param:JsonProperty(
+    "isDeleted",
+    required = true,
+  )
   @get:JsonProperty("isDeleted")
   @get:NotNull
   public val isDeleted: Boolean,

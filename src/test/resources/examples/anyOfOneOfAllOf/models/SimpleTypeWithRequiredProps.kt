@@ -10,7 +10,10 @@ public data class SimpleTypeWithRequiredProps(
   @get:JsonProperty("required_string")
   @get:NotNull
   public val requiredString: String,
-  @param:JsonProperty("required_int")
+  @param:JsonProperty(
+    "required_int",
+    required = true,
+  )
   @get:JsonProperty("required_int")
   @get:NotNull
   public val requiredInt: Int,

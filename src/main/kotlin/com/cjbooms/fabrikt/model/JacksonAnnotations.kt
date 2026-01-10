@@ -24,8 +24,14 @@ object JacksonAnnotations : SerializationAnnotations {
     override fun addProperty(propertySpecBuilder: PropertySpec.Builder, oasKey: String, kotlinTypeInfo: KotlinTypeInfo): PropertySpec.Builder =
         propertySpecBuilder.addAnnotation(JacksonMetadata.jacksonPropertyAnnotation(oasKey))
 
-    override fun addParameter(propertySpecBuilder: PropertySpec.Builder, oasKey: String) =
-        propertySpecBuilder.addAnnotation(JacksonMetadata.jacksonParameterAnnotation(oasKey))
+    override fun addParameter(
+        propertySpecBuilder: PropertySpec.Builder,
+        oasKey: String,
+        isRequired: Boolean,
+        typeInfo: KotlinTypeInfo,
+    ) = propertySpecBuilder.addAnnotation(
+        JacksonMetadata.jacksonParameterAnnotation(oasKey, required = isRequired && typeInfo.isPrimitiveType)
+    )
 
     override fun addClassAnnotation(typeSpecBuilder: TypeSpec.Builder) =
         typeSpecBuilder

@@ -31,10 +31,12 @@ object JacksonMetadata {
         .useSiteTarget(AnnotationSpec.UseSiteTarget.GET)
         .addMember("%S", name).build()
 
-    fun jacksonParameterAnnotation(name: String) = AnnotationSpec
+    fun jacksonParameterAnnotation(name: String, required: Boolean = false) = AnnotationSpec
         .builder(JSON_PROPERTY_CLASS)
         .useSiteTarget(AnnotationSpec.UseSiteTarget.PARAM)
-        .addMember("%S", name).build()
+        .addMember("%S", name)
+        .apply { if (required) addMember("required = %L", true) }
+        .build()
 
     val anySetter = AnnotationSpec.builder(JSON_ANY_SETTER).build()
     val anyGetter = AnnotationSpec.builder(JSON_ANY_GETTER).build()
