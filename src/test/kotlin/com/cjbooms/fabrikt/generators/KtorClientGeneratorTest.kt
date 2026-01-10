@@ -10,6 +10,7 @@ import com.cjbooms.fabrikt.model.SourceApi
 import com.cjbooms.fabrikt.util.TestFileUtils.toSingleFile
 import com.cjbooms.fabrikt.util.GeneratedCodeAsserter.Companion.assertThatGenerated
 import com.cjbooms.fabrikt.util.ModelNameRegistry
+import com.cjbooms.fabrikt.model.SimpleFile
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -39,7 +40,7 @@ class KtorClientGeneratorTest {
 
     @ParameterizedTest
     @MethodSource("fullApiTestCases")
-    fun `correct Ktor routing resources are generated`(testCaseName: String) {
+    fun `correct Ktor client code is generated`(testCaseName: String) {
         val packages = Packages("examples.$testCaseName")
         val apiLocation = javaClass.getResource("/examples/$testCaseName/api.yaml")!!
         val sourceApi = SourceApi(apiLocation.readText(), baseDir = Paths.get(apiLocation.toURI()))
@@ -55,5 +56,25 @@ class KtorClientGeneratorTest {
             .toSingleFile()
 
         assertThatGenerated(clientCode).isEqualTo(expectedClient)
+    }
+
+    @ParameterizedTest
+    @MethodSource("fullApiTestCases")
+    fun `correct Ktor API models are generated`(testCaseName: String) {
+        val packages = Packages("examples.$testCaseName")
+        val apiLocation = javaClass.getResource("/examples/$testCaseName/api.yaml")!!
+        val sourceApi = SourceApi(apiLocation.readText(), baseDir = Paths.get(apiLocation.toURI()))
+
+        val expectedApiModels = "/examples/$testCaseName/client/ktor/KtorApiModels.kt"
+
+        val apiModels = KtorClientGenerator(
+            packages,
+            sourceApi
+        )
+            .generateLibrary(emptySet())
+            .filterIsInstance<SimpleFile>()
+            .first { it.path.fileName.toString() == "KtorApiModels.kt" }
+
+        assertThatGenerated(apiModels.content).isEqualTo(expectedApiModels)
     }
 }

@@ -22,7 +22,6 @@ kotlin {
 
 val junitVersion: String by rootProject.extra
 val ktorVersion: String by rootProject.extra
-val kotlinxDateTimeVersion: String by rootProject.extra
 
 dependencies {
     // ktor client
@@ -30,8 +29,6 @@ dependencies {
     implementation("io.ktor:ktor-client-cio:$ktorVersion")
     implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
-
-    implementation("org.jetbrains.kotlinx:kotlinx-datetime:$kotlinxDateTimeVersion")
 
     // ktor test
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
@@ -54,8 +51,6 @@ tasks {
 
     withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
         compilerOptions {
-            optIn.add("kotlinx.serialization.ExperimentalSerializationApi")
-            optIn.add("kotlin.time.ExperimentalTime")
             jvmTarget.set(JvmTarget.JVM_17)
         }
         dependsOn(generateCode)
@@ -83,7 +78,7 @@ fun createGenerateCodeTask(name: String, apiFilePath: String, additionalArgs: Li
         "--targets", "http_models",
         "--targets", "client",
         "--http-client-target", "ktor",
-        "--serialization-library", "kotlinx_serialization",
+        "--serialization-library", "jackson",
         "--validation-library", "no_validation"
     ).plus(additionalArgs)
     dependsOn(":jar")
