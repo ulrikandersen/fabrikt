@@ -15,8 +15,8 @@ plugins {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
 }
 
 val junitVersion: String by rootProject.extra
@@ -84,7 +84,7 @@ tasks {
         compilerOptions {
             optIn.add("kotlinx.serialization.ExperimentalSerializationApi")
             optIn.add("kotlin.time.ExperimentalTime")
-            jvmTarget.set(JvmTarget.JVM_17)
+            jvmTarget.set(JvmTarget.JVM_21)
         }
         dependsOn(generateCodeTask)
         dependsOn(generatePrimitiveTypesCodeTask)
