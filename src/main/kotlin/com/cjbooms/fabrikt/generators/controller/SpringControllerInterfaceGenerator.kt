@@ -16,6 +16,7 @@ import com.cjbooms.fabrikt.model.ControllerType
 import com.cjbooms.fabrikt.model.HeaderParam
 import com.cjbooms.fabrikt.model.KotlinTypeInfo
 import com.cjbooms.fabrikt.model.KotlinTypes
+import com.cjbooms.fabrikt.model.MultipartParameter
 import com.cjbooms.fabrikt.model.PathParam
 import com.cjbooms.fabrikt.model.QueryParam
 import com.cjbooms.fabrikt.model.RequestParameter
@@ -109,6 +110,9 @@ class SpringControllerInterfaceGenerator(
                             .addValidationAnnotations(it)
                             .addSpringParamAnnotation(it)
                             .build()
+
+                    is MultipartParameter ->
+                        error("Multipart parameters not yet supported for Spring")
                 }
             }
             .forEach { funcSpec.addParameter(it) }

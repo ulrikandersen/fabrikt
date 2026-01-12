@@ -54,3 +54,11 @@ sealed interface NetworkResult<out T> {
      */
     data class Failure(val error: NetworkError) : NetworkResult<Nothing>
 }
+
+/**
+ * Represents a file upload with optional filename.
+ *
+ * @param content The file content as a byte array
+ * @param filename Optional filename to use in the Content-Disposition header
+ */
+data class FileUpload(val content: ByteArray, val filename: String? = null)

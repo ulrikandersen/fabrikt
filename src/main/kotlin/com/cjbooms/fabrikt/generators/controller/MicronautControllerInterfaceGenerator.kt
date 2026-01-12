@@ -17,6 +17,7 @@ import com.cjbooms.fabrikt.model.ControllerLibraryType
 import com.cjbooms.fabrikt.model.ControllerType
 import com.cjbooms.fabrikt.model.HeaderParam
 import com.cjbooms.fabrikt.model.KotlinTypes
+import com.cjbooms.fabrikt.model.MultipartParameter
 import com.cjbooms.fabrikt.model.PathParam
 import com.cjbooms.fabrikt.model.QueryParam
 import com.cjbooms.fabrikt.model.RequestParameter
@@ -111,6 +112,9 @@ class MicronautControllerInterfaceGenerator(
                             .addValidationAnnotations(it)
                             .addMicronautParamAnnotation(it)
                             .build()
+
+                    is MultipartParameter ->
+                        error("Multipart parameters not yet supported for Micronaut")
                 }
             }
             .forEach { funcSpec.addParameter(it) }

@@ -1,4 +1,4 @@
-package {{ client }}
+package examples.multipartFormData.client
 
 import java.io.IOException
 
