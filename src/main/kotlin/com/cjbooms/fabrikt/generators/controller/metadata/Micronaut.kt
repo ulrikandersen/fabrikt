@@ -37,6 +37,10 @@ object MicronautImports {
     val HEADER = ClassName(Packages.MICRONAUT_HTTP_ANNOTATION, "Header")
     val QUERY_VALUE = ClassName(Packages.MICRONAUT_HTTP_ANNOTATION, "QueryValue")
     val PATH_VARIABLE = ClassName(Packages.MICRONAUT_HTTP_ANNOTATION, "PathVariable")
+    val PART = ClassName(Packages.MICRONAUT_HTTP_ANNOTATION, "Part")
+    val COMPLETED_FILE_UPLOAD = ClassName("io.micronaut.http.multipart", "CompletedFileUpload")
+    val PUBLISHER = ClassName("org.reactivestreams", "Publisher")
+    val MONO = ClassName("reactor.core.publisher", "Mono")
 
 
     object HttpMethods {
