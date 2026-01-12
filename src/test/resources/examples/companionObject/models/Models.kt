@@ -12,7 +12,10 @@ import kotlin.String
 import kotlin.collections.Map
 
 public data class Cat(
-    @param:JsonProperty("id")
+    @param:JsonProperty(
+        "id",
+        required = true,
+    )
     @get:JsonProperty("id")
     @get:NotNull
     override val id: Long,
@@ -38,7 +41,10 @@ public data class Cat(
 }
 
 public data class Dog(
-    @param:JsonProperty("id")
+    @param:JsonProperty(
+        "id",
+        required = true,
+    )
     @get:JsonProperty("id")
     @get:NotNull
     override val id: Long,
@@ -83,7 +89,10 @@ public enum class DogBreed(
 }
 
 public data class Error(
-    @param:JsonProperty("code")
+    @param:JsonProperty(
+        "code",
+        required = true,
+    )
     @get:JsonProperty("code")
     @get:NotNull
     public val code: Int,

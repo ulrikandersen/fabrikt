@@ -75,8 +75,12 @@ object KotlinxSerializationAnnotations : SerializationAnnotations {
             else -> false
         }
 
-    override fun addParameter(propertySpecBuilder: PropertySpec.Builder, oasKey: String) =
-        propertySpecBuilder // not applicable
+    override fun addParameter(
+        propertySpecBuilder: PropertySpec.Builder,
+        oasKey: String,
+        isRequired: Boolean,
+        typeInfo: KotlinTypeInfo,
+    ) = propertySpecBuilder // not applicable
 
     override fun addClassAnnotation(typeSpecBuilder: TypeSpec.Builder) =
         typeSpecBuilder.addAnnotation(AnnotationSpec.builder(Serializable::class).build())

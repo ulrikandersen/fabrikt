@@ -30,7 +30,10 @@ public data class ThirdLevelChild21(
   /**
    * timestamp
    */
-  @param:JsonProperty("creationDate")
+  @param:JsonProperty(
+    "creationDate",
+    required = true,
+  )
   @get:JsonProperty("creationDate")
   @get:NotNull
   public val creationDate: Int,
