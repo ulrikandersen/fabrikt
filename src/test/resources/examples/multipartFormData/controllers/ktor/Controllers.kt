@@ -52,12 +52,12 @@ public interface FilesUploadController {
         public fun Route.filesUploadRoutes(controller: FilesUploadController) {
             post("/files/upload") {
                 val multipartData = call.receiveMultipart()
-                var fileReceived: ReceivedFile? = null
+                val fileCollected = mutableListOf<ReceivedFile>()
                 multipartData.forEachPart { part ->
                     when (part.name) {
                         "file" ->
                             if (part is PartData.FileItem) {
-                                fileReceived =
+                                fileCollected +=
                                     ReceivedFile(
                                         part.provider().readRemaining().readByteArray(),
                                         part.originalFileName,
@@ -65,9 +65,10 @@ public interface FilesUploadController {
                                     )
                             }
                     }
+                    part.dispose()
                 }
                 val file =
-                    fileReceived ?: throw
+                    fileCollected.firstOrNull() ?: throw
                         BadRequestException("Missing required multipart part: file")
                 controller.uploadFile(file, TypedApplicationCall(call))
             }
@@ -163,22 +164,22 @@ public interface FilesUploadMultipleController {
         public fun Route.filesUploadMultipleRoutes(controller: FilesUploadMultipleController) {
             post("/files/upload-multiple") {
                 val multipartData = call.receiveMultipart()
-                val filesParts = mutableListOf<ReceivedFile>()
+                val filesCollected = mutableListOf<ReceivedFile>()
                 multipartData.forEachPart { part ->
                     when (part.name) {
                         "files" ->
                             if (part is PartData.FileItem) {
-                                filesParts.add(
+                                filesCollected +=
                                     ReceivedFile(
                                         part.provider().readRemaining().readByteArray(),
                                         part.originalFileName,
                                         part.contentType,
-                                    ),
-                                )
+                                    )
                             }
                     }
+                    part.dispose()
                 }
-                val files = filesParts.toList()
+                val files = filesCollected.toList()
                 controller.uploadMultipleFiles(files, TypedApplicationCall(call))
             }
         }

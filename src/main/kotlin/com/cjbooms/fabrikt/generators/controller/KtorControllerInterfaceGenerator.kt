@@ -336,21 +336,16 @@ class KtorControllerInterfaceGenerator(
             MemberName("io.ktor.server.request", "receiveMultipart"),
         )
 
-        // Initialize variables for each multipart parameter
-        // For files, use ReceivedFile - wraps content with originalFileName and contentType metadata
+        // Initialize collectors for each multipart parameter
         for (param in multipartParams) {
             if (param.isFile) {
-                if (param.schema.type == "array") {
-                    builder.addStatement("val ${param.name}Parts = mutableListOf<%T>()", receivedFileType)
-                } else {
-                    builder.addStatement("var ${param.name}Received: %T? = null", receivedFileType)
-                }
+                builder.addStatement("val ${param.name}Collected = mutableListOf<%T>()", receivedFileType)
             } else {
-                builder.addStatement("var ${param.name}Value: %T? = null", String::class)
+                builder.addStatement("val ${param.name}Collected = mutableListOf<%T>()", String::class)
             }
         }
 
-        // Process multipart data - read file content immediately as Ktor 3.0 disposes parts after iteration
+        // Process multipart data - read file content immediately and dispose each part after processing
         val forEachPartFun = MemberName("io.ktor.http.content", "forEachPart")
         builder.addStatement("multipartData.%M { part ->", forEachPartFun)
         builder.indent()
@@ -359,50 +354,44 @@ class KtorControllerInterfaceGenerator(
 
         for (param in multipartParams) {
             if (param.isFile) {
-                if (param.schema.type == "array") {
-                    builder.addStatement(
-                        "%S -> if (part is %T) ${param.name}Parts.add(%T(part.provider().%M().%M(), part.originalFileName, part.contentType))",
-                        param.oasName, partDataFileItem, receivedFileType, readRemainingFun, readByteArrayFun
-                    )
-                } else {
-                    builder.addStatement(
-                        "%S -> if (part is %T) ${param.name}Received = %T(part.provider().%M().%M(), part.originalFileName, part.contentType)",
-                        param.oasName, partDataFileItem, receivedFileType, readRemainingFun, readByteArrayFun
-                    )
-                }
+                builder.addStatement(
+                    "%S -> if (part is %T) ${param.name}Collected += %T(part.provider().%M().%M(), part.originalFileName, part.contentType)",
+                    param.oasName, partDataFileItem, receivedFileType, readRemainingFun, readByteArrayFun
+                )
             } else {
-                builder.addStatement("%S -> if (part is %T) ${param.name}Value = part.value", param.oasName, partDataFormItem)
+                builder.addStatement("%S -> if (part is %T) ${param.name}Collected += part.value", param.oasName, partDataFormItem)
             }
         }
 
         builder.unindent()
         builder.addStatement("}")
+        builder.addStatement("part.dispose()")
         builder.unindent()
         builder.addStatement("}")
 
-        // Assign final values
+        // Extract final values from collected lists
         for (param in multipartParams) {
             if (param.isFile) {
                 if (param.schema.type == "array") {
-                    builder.addStatement("val ${param.name} = ${param.name}Parts.toList()")
+                    builder.addStatement("val ${param.name} = ${param.name}Collected.toList()")
                 } else {
                     if (param.isRequired) {
-                        builder.addStatement("val ${param.name} = ${param.name}Received ?: throw %M(%S)",
+                        builder.addStatement("val ${param.name} = ${param.name}Collected.firstOrNull() ?: throw %M(%S)",
                             MemberName("io.ktor.server.plugins", "BadRequestException"),
                             "Missing required multipart part: ${param.oasName}"
                         )
                     } else {
-                        builder.addStatement("val ${param.name} = ${param.name}Received")
+                        builder.addStatement("val ${param.name} = ${param.name}Collected.firstOrNull()")
                     }
                 }
             } else {
                 if (param.isRequired) {
-                    builder.addStatement("val ${param.name} = ${param.name}Value ?: throw %M(%S)",
+                    builder.addStatement("val ${param.name} = ${param.name}Collected.firstOrNull() ?: throw %M(%S)",
                         MemberName("io.ktor.server.plugins", "BadRequestException"),
                         "Missing required multipart part: ${param.oasName}"
                     )
                 } else {
-                    builder.addStatement("val ${param.name} = ${param.name}Value")
+                    builder.addStatement("val ${param.name} = ${param.name}Collected.firstOrNull()")
                 }
             }
         }
