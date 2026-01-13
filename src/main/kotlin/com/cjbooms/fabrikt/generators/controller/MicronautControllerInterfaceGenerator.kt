@@ -34,6 +34,7 @@ import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.TypeSpec
+import com.squareup.kotlinpoet.asClassName
 
 class MicronautControllerInterfaceGenerator(
     private val packages: Packages,
@@ -75,9 +76,19 @@ class MicronautControllerInterfaceGenerator(
         verb: String,
     ): FunSpec {
         val methodName = methodName(op, verb, path.pathString.isSingleResource())
-        val returnType = MicronautImports.RESPONSE.parameterizedBy(op.happyPathResponse(packages.base))
         val parameters = op.toIncomingParameters(packages.base, path.parameters, emptyList())
         val globalSecurity = this.api.openApi3.securityRequirements.securitySupport()
+
+        // Check if any multipart parameter uses Publisher (array file uploads).
+        // When accepting Publisher parameters, Micronaut requires a reactive return type (Mono/Flux)
+        // to avoid blocking the Netty event loop, which would cause deadlocks.
+        val hasPublisherParam = parameters.any { it is MultipartParameter && it.isFile && it.schema.type == "array" }
+        val baseReturnType = MicronautImports.RESPONSE.parameterizedBy(op.happyPathResponse(packages.base))
+        val returnType = if (hasPublisherParam) {
+            MicronautImports.MONO.parameterizedBy(baseReturnType)
+        } else {
+            baseReturnType
+        }
 
         // Main method builder
         val funcSpec = FunSpec
@@ -105,6 +116,9 @@ class MicronautControllerInterfaceGenerator(
                             )
                             .maybeAddAnnotation(validationAnnotations.parameterValid())
                             .build()
+
+                    is MultipartParameter ->
+                        it.toMultipartParameterSpec()
 
                     is RequestParameter ->
                         it
@@ -234,6 +248,33 @@ class MicronautControllerInterfaceGenerator(
             }
             this.addAnnotation(it.build())
         }
+
+    private fun MultipartParameter.toMultipartParameterSpec(): ParameterSpec {
+        // Micronaut requires reactive types (Publisher) for multiple files with same part name.
+        // This is because Micronaut's Netty-based server processes multipart parts as they arrive,
+        // and using Publisher allows processing each file as it completes rather than buffering all.
+        // Note: There are known edge-case bugs with this approach, see:
+        // https://github.com/micronaut-projects/micronaut-core/issues/9892
+        val fileType = if (schema.type == "array") {
+            MicronautImports.PUBLISHER.parameterizedBy(MicronautImports.COMPLETED_FILE_UPLOAD)
+        } else {
+            MicronautImports.COMPLETED_FILE_UPLOAD
+        }
+
+        val paramType = if (isFile) {
+            if (isRequired) fileType else fileType.copy(nullable = true)
+        } else {
+            type
+        }
+
+        return ParameterSpec.builder(name, paramType)
+            .addAnnotation(
+                AnnotationSpec.builder(MicronautImports.PART)
+                    .addMember("value = %S", oasName)
+                    .build()
+            )
+            .build()
+    }
 }
 
 data class MicronautControllers(
