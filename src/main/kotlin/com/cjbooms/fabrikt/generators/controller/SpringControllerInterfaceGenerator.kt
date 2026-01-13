@@ -33,6 +33,7 @@ import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.TypeSpec
+import com.squareup.kotlinpoet.asClassName
 
 class SpringControllerInterfaceGenerator(
     private val packages: Packages,
@@ -103,6 +104,10 @@ class SpringControllerInterfaceGenerator(
                             .addAnnotation(SpringAnnotations.requestBodyBuilder().build())
                             .maybeAddAnnotation(validationAnnotations.parameterValid())
                             .build()
+
+                    is MultipartParameter ->
+                        it
+                            .toMultipartParameterSpec()
 
                     is RequestParameter ->
                         it
@@ -187,6 +192,29 @@ class SpringControllerInterfaceGenerator(
 
             this.addAnnotation(it.build())
         }
+
+    private fun MultipartParameter.toMultipartParameterSpec(): ParameterSpec {
+        val fileType = if (schema.type == "array") {
+            List::class.asClassName().parameterizedBy(SpringImports.MULTIPART_FILE)
+        } else {
+            SpringImports.MULTIPART_FILE
+        }
+
+        val paramType = if (isFile) {
+            if (isRequired) fileType else fileType.copy(nullable = true)
+        } else {
+            type
+        }
+
+        return ParameterSpec.builder(name, paramType)
+            .addAnnotation(
+                SpringAnnotations.requestPartBuilder()
+                    .addMember("value = %S", oasName)
+                    .addMember("required = %L", isRequired)
+                    .build()
+            )
+            .build()
+    }
 
     private fun FunSpec.Builder.addSuspendModifier(): FunSpec.Builder {
         if (options.any { it == ControllerCodeGenOptionType.SUSPEND_MODIFIER }) {
