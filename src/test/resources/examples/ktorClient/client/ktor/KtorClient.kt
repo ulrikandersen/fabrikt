@@ -417,7 +417,7 @@ public class UptimeClient(
      * 	[NetworkResult.Success] with [kotlin.String] if the request was successful.
      * 	[NetworkResult.Failure] with a [NetworkError] if the request failed.
      */
-    public suspend fun `get_System-Uptime`(): NetworkResult<String> {
+    public suspend fun getSystemUptime(): NetworkResult<String> {
         val url = """/uptime"""
 
         return try {
