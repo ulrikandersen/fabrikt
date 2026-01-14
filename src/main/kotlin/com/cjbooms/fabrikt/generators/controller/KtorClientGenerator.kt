@@ -6,6 +6,7 @@ import com.cjbooms.fabrikt.generators.GeneratorUtils.splitByType
 import com.cjbooms.fabrikt.generators.GeneratorUtils.toIncomingParameters
 import com.cjbooms.fabrikt.generators.GeneratorUtils.toKCodeName
 import com.cjbooms.fabrikt.generators.client.ClientGenerator
+import com.cjbooms.fabrikt.util.NormalisedString.camelCase
 import com.cjbooms.fabrikt.generators.controller.ControllerGeneratorUtils.happyPathResponse
 import com.cjbooms.fabrikt.model.ClientType
 import com.cjbooms.fabrikt.model.Clients
@@ -274,7 +275,7 @@ class KtorClientGenerator(
 
     private fun clientRequestFunctionName(op: Operation, verb: String, params: List<RequestParameter>) =
         if (op.operationId != null) {
-            op.operationId.replaceFirstChar { it.lowercase() }
+            op.operationId.camelCase()
         } else {
             buildString {
                 append(verb.lowercase())
