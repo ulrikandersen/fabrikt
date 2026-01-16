@@ -1,5 +1,6 @@
 package com.cjbooms.fabrikt.generators
 
+import com.cjbooms.fabrikt.cli.JacksonNullabilityMode
 import com.cjbooms.fabrikt.generators.GeneratorUtils.toKDoc
 import com.cjbooms.fabrikt.generators.TypeFactory.maybeMakeMapValueNullable
 import com.cjbooms.fabrikt.generators.model.JacksonMetadata
@@ -44,6 +45,7 @@ object PropertyUtils {
         classSettings: ClassSettings = ClassSettings(ClassSettings.PolymorphyType.NONE),
         validationAnnotations: ValidationAnnotations = JavaxValidationAnnotations,
         serializationAnnotations: SerializationAnnotations = JacksonAnnotations,
+        jacksonNullabilityMode: JacksonNullabilityMode = JacksonNullabilityMode.NONE,
     ) {
         if (this.typeInfo is KotlinTypeInfo.UntypedObject && !serializationAnnotations.supportsAdditionalProperties)
             throw UnsupportedOperationException("Untyped objects not supported by selected serialization library (${this.oasKey}: ${this.schema})")
@@ -159,9 +161,24 @@ object PropertyUtils {
                 property.initializer(name)
                 val constructorParameter: ParameterSpec.Builder = ParameterSpec.builder(name, wrappedType)
                 val oasDefault = getDefaultValue(this, parameterizedType)
+
+                val enforceNonNull = jacksonNullabilityMode in setOf(
+                    JacksonNullabilityMode.ENFORCE_OPTIONAL_NON_NULL,
+                    JacksonNullabilityMode.STRICT
+                )
+
+                val enforceRequiredNullable = jacksonNullabilityMode in setOf(
+                    JacksonNullabilityMode.ENFORCE_REQUIRED_NULLABLE,
+                    JacksonNullabilityMode.STRICT
+                )
+
+                if (enforceRequiredNullable && isRequired && schema.isNullable) {
+                    property.addAnnotation(JacksonMetadata.JSON_INCLUDE_ALWAYS)
+                }
+
                 if (!isRequired) {
-                    if (classSettings.addJsonIncludeNonNullAnnotation) {
-                        property.addAnnotation(JacksonMetadata.JSON_INCLUDE)
+                    if (classSettings.addJsonIncludeNonNullAnnotation || (enforceNonNull && !schema.isNullable)) {
+                        property.addAnnotation(JacksonMetadata.JSON_INCLUDE_NON_NULL)
                     }
                     if (oasDefault != null) {
                         val wrappedDefault =

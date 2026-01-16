@@ -4,6 +4,7 @@ import com.beust.jcommander.ParameterException
 import com.cjbooms.fabrikt.cli.OutputOptionType
 import com.cjbooms.fabrikt.cli.CodeGenTypeOverride
 import com.cjbooms.fabrikt.cli.CodeGenerationType
+import com.cjbooms.fabrikt.cli.JacksonNullabilityMode
 import com.cjbooms.fabrikt.cli.ModelCodeGenOptionType
 import com.cjbooms.fabrikt.cli.ValidationLibrary
 import com.cjbooms.fabrikt.configurations.Packages
@@ -48,7 +49,7 @@ class ModelGeneratorTest {
         "externalReferences/targeted",
         "githubApi",
         "inLinedObject",
-        "customExtensions",
+        "arrays",
         "mapExamples",
         "mapExamplesNonNullValues",
         "mixingCamelSnakeLispCase",
@@ -100,6 +101,15 @@ class ModelGeneratorTest {
         }
         if (testCaseName == "byteArrayStream") {
             MutableSettings.addOption(CodeGenTypeOverride.BYTEARRAY_AS_INPUTSTREAM)
+        }
+        if (testCaseName == "defaultValues") {
+            MutableSettings.addOption(JacksonNullabilityMode.ENFORCE_OPTIONAL_NON_NULL)
+        }
+        if (testCaseName == "arrays") {
+            MutableSettings.addOption(JacksonNullabilityMode.ENFORCE_REQUIRED_NULLABLE)
+        }
+        if (testCaseName == "optionalVsRequired") {
+            MutableSettings.addOption(JacksonNullabilityMode.STRICT)
         }
         val basePackage = "examples.${testCaseName.replace("/", ".")}"
         val apiLocation = javaClass.getResource("/examples/$testCaseName/api.yaml")!!
