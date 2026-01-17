@@ -9,6 +9,7 @@ import com.cjbooms.fabrikt.generators.MutableSettings
 import com.cjbooms.fabrikt.model.OasType.Companion.toOasType
 import com.cjbooms.fabrikt.util.KaizenParserExtensions.getEnumValues
 import com.cjbooms.fabrikt.util.KaizenParserExtensions.isEnumDefinition
+import com.cjbooms.fabrikt.util.KaizenParserExtensions.isInlinedObjectDefinition
 import com.cjbooms.fabrikt.util.KaizenParserExtensions.isUnsupportedComplexInlinedDefinition
 import com.cjbooms.fabrikt.util.KaizenParserExtensions.isInlinedTypedAdditionalProperties
 import com.cjbooms.fabrikt.util.KaizenParserExtensions.isNotDefined
@@ -139,19 +140,15 @@ sealed class KotlinTypeInfo(val modelKClass: KClass<*>, val generatedModelClassN
                 OasType.Int64 -> BigInt
                 OasType.Integer -> Integer
                 OasType.Boolean -> Boolean
-                OasType.Set ->
-                    if (schema.itemsSchema.isNotDefined())
-                        throw IllegalArgumentException("Property ${schema.name} cannot be parsed to a Schema. Check your input")
-                    else Array(from(schema.itemsSchema, oasKey, enclosingSchema), schema.itemsSchema.isNullable, true)
+                OasType.Set -> {
+                    val parameterizedType = getParameterizedTypeForArray(schema, enclosingSchema, oasKey)
+                    Array(parameterizedType, schema.itemsSchema.isNullable, true)
+                }
 
-                OasType.Array ->
-                    if (schema.itemsSchema.isNotDefined())
-                        throw IllegalArgumentException("Property ${schema.name} cannot be parsed to a Schema. Check your input")
-                    else Array(
-                        from(schema.itemsSchema, oasKey, enclosingSchema),
-                        schema.itemsSchema.isNullable,
-                        schema.itemsSchema.isUniqueItems
-                    )
+                OasType.Array -> {
+                    val parameterizedType = getParameterizedTypeForArray(schema, enclosingSchema, oasKey)
+                    Array(parameterizedType, schema.itemsSchema.isNullable, schema.itemsSchema.isUniqueItems)
+                }
 
                 OasType.Object -> Object(ModelNameRegistry.getOrRegister(schema, enclosingSchema))
                 OasType.Map ->
@@ -181,6 +178,19 @@ sealed class KotlinTypeInfo(val modelKClass: KClass<*>, val generatedModelClassN
                     } else {
                         AnyType
                     }
+            }
+        }
+
+        private fun getParameterizedTypeForArray(
+            arraySchema: Schema,
+            enclosingSchema: Schema?,
+            oasKey: String
+        ): KotlinTypeInfo {
+            return when {
+                arraySchema.itemsSchema.isInlinedObjectDefinition() && !arraySchema.itemsSchema.isUnsupportedComplexInlinedDefinition() ->
+                    Object(ModelNameRegistry.getOrRegister(arraySchema, enclosingSchema))
+                arraySchema.itemsSchema.isNotDefined() -> AnyType
+                else -> from(arraySchema.itemsSchema, oasKey, enclosingSchema)
             }
         }
 

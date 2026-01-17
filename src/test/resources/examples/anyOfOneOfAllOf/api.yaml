@@ -34,7 +34,7 @@ components:
           properties:
             top_level_prop:
               type: number
-    
+
     # Test case for top-level required with allOf (no duplicate in inline required)
     TopLevelRequiredWithAllOf:
       allOf:
@@ -52,7 +52,7 @@ components:
               type: string
       required:
         - top_level_only_prop
-    
+
     # Test case for nested objects - required should NOT leak to nested properties
     OuterWithNestedObject:
       type: object
@@ -77,7 +77,7 @@ components:
         - $ref: "#/components/schemas/ComplexSecondOneA"
         - type: string
         - type: integer
-    
+
     ContainsPrimitiveOneOf:
       oneOf:
         - type: string
@@ -133,10 +133,10 @@ components:
           type: string
         forth_property:
           $ref: '#/components/schemas/AnyValue'
-    
+
     AnyValue:
       description: Tests support for https://swagger.io/docs/specification/data-models/data-types/#any
-    
+
     OneOfAdditionalProps:
       type: object
       properties:
@@ -146,7 +146,7 @@ components:
         oneOf:
           - $ref: '#/components/schemas/FirstOneB'
           - $ref: '#/components/schemas/SecondOneB'
-    
+
     # Test: oneOf with discriminator should not trigger old allOf polymorphism generation (Items should have List<Any>, not List<BaseItem>)
     Items:
       type: object
@@ -157,7 +157,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ItemReference'
-    
+
     ItemReference:
       oneOf:
         - $ref: '#/components/schemas/ProductItem'
@@ -167,7 +167,7 @@ components:
         mapping:
           PRODUCT: '#/components/schemas/ProductItem'
           OUTFIT: '#/components/schemas/OutfitItem'
-    
+
     BaseItem:
       required:
         - id
@@ -178,7 +178,7 @@ components:
           type: string
         item_type:
           type: string
-    
+
     ProductItem:
       allOf:
         - $ref: '#/components/schemas/BaseItem'
@@ -188,7 +188,7 @@ components:
               type: string
           required:
             - sku
-    
+
     OutfitItem:
       allOf:
         - $ref: '#/components/schemas/BaseItem'
@@ -198,3 +198,60 @@ components:
               type: string
           required:
             - outfit_id
+
+    ArrayWithInlinedAllOf:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            required:
+              - id
+              - status_code
+            allOf:
+              - $ref: '#/components/schemas/ItemId'
+              - type: object
+                properties:
+                  status_code:
+                    type: integer
+    ItemId:
+      type: object
+      properties:
+        id:
+          type: string
+
+    SetWithInlinedAllOf:
+      type: object
+      properties:
+        items:
+          type: array
+          uniqueItems: true
+          items:
+            required:
+              - id
+              - status_code
+            allOf:
+              - $ref: '#/components/schemas/ItemId'
+              - type: object
+                properties:
+                  status_code:
+                    type: integer
+
+    ArrayWithReferencedAllOf:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/RefAllOf'
+
+    RefAllOf:
+      required:
+        - id
+        - status_code
+      allOf:
+        - $ref: '#/components/schemas/ItemId'
+        - type: object
+          properties:
+            status_code:
+              type: integer
