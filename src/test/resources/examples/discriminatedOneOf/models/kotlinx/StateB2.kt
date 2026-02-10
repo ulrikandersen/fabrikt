@@ -5,12 +5,10 @@ import kotlin.String
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+@SerialName("b2")
 @Serializable
-public data class OneObject(
-  /**
-   * Type Property
-   */
-  @SerialName("type")
+public data class StateB2(
+  @SerialName("mode")
   @get:NotNull
-  public val type: String,
-)
+  public val mode: String,
+) : StateB
