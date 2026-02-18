@@ -578,13 +578,11 @@ class ModelGenerator(
         for (oneOfInterface in oneOfInterfaces) {
             classBuilder
                 .addSuperinterface(generatedType(packages.base, ModelNameRegistry.getOrRegister(oneOfInterface)))
-
-            // determine the mapping key for this schema as a subtype of the oneOf interface
-            val mappingKey = oneOfInterface.discriminator.mappingKeyForSchemaName(schemaName)
-            if (mappingKey != null) {
-                serializationAnnotations.addSubtypeMappingAnnotation(classBuilder, mappingKey)
-            }
         }
+        oneOfInterfaces
+            .mapNotNull { it.discriminator.mappingKeyForSchemaName(schemaName) }
+            .distinct()
+            .forEach { serializationAnnotations.addSubtypeMappingAnnotation(classBuilder, it) }
 
         if (!generateObject) {
             if (oneOfInterfaces.isNotEmpty()) {
