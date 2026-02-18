@@ -6,7 +6,6 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @SerialName("obj1")
-@SerialName("obj1")
 @Serializable
 public data class Obj1(
   @SerialName("id1")
