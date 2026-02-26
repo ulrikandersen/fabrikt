@@ -23,6 +23,11 @@ public data class NewNullableFormat(
   @get:Valid
   @param:JsonInclude(JsonInclude.Include.ALWAYS)
   public val requiredNullableRef: OneObject?,
+  @param:JsonProperty("required_nullable_underscore_ref")
+  @get:JsonProperty("required_nullable_underscore_ref")
+  @get:Valid
+  @param:JsonInclude(JsonInclude.Include.ALWAYS)
+  public val requiredNullableUnderscoreRef: OneObject?,
   @param:JsonProperty("singleRequiredFieldNullableRef")
   @get:JsonProperty("singleRequiredFieldNullableRef")
   @get:Valid
