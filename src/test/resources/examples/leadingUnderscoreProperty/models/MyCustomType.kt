@@ -1,7 +1,7 @@
 package examples.leadingUnderscoreProperty.models
 
 import com.fasterxml.jackson.`annotation`.JsonProperty
-import javax.validation.constraints.NotNull
+import jakarta.validation.constraints.NotNull
 import kotlin.Boolean
 import kotlin.Long
 import kotlin.String
