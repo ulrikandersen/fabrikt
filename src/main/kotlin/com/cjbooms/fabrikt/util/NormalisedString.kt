@@ -20,7 +20,12 @@ object NormalisedString {
                 "${characters[0]}_${characters[1]}"
             }
 
-    fun String.camelCase(): String = this.pascalCase().decapitalized()
+    fun String.camelCase(): String {
+        val stripped = trimStart('_')
+        val leadingUnderscores = "_".repeat(length - stripped.length)
+        return if (stripped.isEmpty()) leadingUnderscores
+        else leadingUnderscores + stripped.pascalCase().decapitalized()
+    }
 
     fun String.toModelClassName(parentModelName: String = ""): String = parentModelName + this.pascalCase()
 

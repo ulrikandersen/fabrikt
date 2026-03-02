@@ -72,6 +72,7 @@ class ModelGeneratorTest {
         "oneOfMarkerInterface",
         "untypedObject",
         "primitiveTypes",
+        "leadingUnderscoreProperty",
     )
 
     @BeforeEach
