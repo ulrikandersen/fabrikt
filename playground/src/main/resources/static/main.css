@@ -30,57 +30,70 @@ a, a:visited, a:hover, a:active {
     color: #3BAFDA;
 }
 
-.panel::-webkit-scrollbar {
+.panel::-webkit-scrollbar,
+#file-sidebar::-webkit-scrollbar {
     width: 5px;
 }
 
-.panel::-webkit-scrollbar-track {
+.panel::-webkit-scrollbar-track,
+#file-sidebar::-webkit-scrollbar-track {
     background: #F1F1F1;
 }
 
-.panel::-webkit-scrollbar-thumb {
+.panel::-webkit-scrollbar-thumb,
+#file-sidebar::-webkit-scrollbar-thumb {
     background: #3BAFDA;
 }
 
-.panel::-webkit-scrollbar-thumb:hover {
+.panel::-webkit-scrollbar-thumb:hover,
+#file-sidebar::-webkit-scrollbar-thumb:hover {
     background: #3BAFDA;
+}
+
+.file-sidebar-empty {
+    padding: 10px;
+    font-family: monospace;
+    font-size: 14px;
+    color: #999;
+}
+
+.file-nav-group {
+    margin-bottom: 4px;
+}
+
+.file-nav-heading {
+    padding: 8px 10px 3px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #aaa;
 }
 
 .file-nav {
-    position: sticky;
-    top: -10px;
-    z-index: 10;
-    background: rgba(255, 255, 255, 0.75);
-    backdrop-filter: blur(6px);
-    border-bottom: 1px solid #e0e0e0;
     list-style: none;
-    padding: 8px 10px;
-    margin: -10px -10px 0 -10px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
+    padding: 0;
+    margin: 0;
+}
+
+.file-nav li {
+    border-bottom: 1px solid #f5f5f5;
 }
 
 .file-nav a {
-    display: inline-block;
-    padding: 2px 10px;
-    border-radius: 12px;
-    border: 1px solid #3BAFDA;
-    color: #3BAFDA;
+    display: block;
+    padding: 4px 10px;
     text-decoration: none;
-    font-size: 13px;
+    color: #333;
     white-space: nowrap;
-    transition: background 0.15s, color 0.15s;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: background 0.1s, color 0.1s;
 }
 
 .file-nav a:hover {
-    background: #3BAFDA;
-    color: #fff;
-}
-
-.file-nav a:hover .file-tag {
-    background: rgba(255,255,255,0.25);
-    color: #fff;
+    background: #f0f8fd;
+    color: #3BAFDA;
 }
 
 .file-tag {
