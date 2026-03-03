@@ -15,4 +15,13 @@ public data class ExampleModel(
   @get:NotNull
   @get:Valid
   public val _foo: MyCustomType,
+  @param:JsonProperty("foo_")
+  @get:JsonProperty("foo_")
+  @get:NotNull
+  @get:Valid
+  public val foo_: MyCustomType,
+  @param:JsonProperty("_bar_")
+  @get:JsonProperty("_bar_")
+  @get:NotNull
+  public val _bar_: String,
 )

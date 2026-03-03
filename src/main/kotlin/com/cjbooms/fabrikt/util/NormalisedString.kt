@@ -21,10 +21,12 @@ object NormalisedString {
             }
 
     fun String.camelCase(): String {
-        val stripped = trimStart('_')
-        val leadingUnderscores = "_".repeat(length - stripped.length)
-        return if (stripped.isEmpty()) leadingUnderscores
-        else leadingUnderscores + stripped.pascalCase().decapitalized()
+        val strippedLeading = trimStart('_')
+        val leadingUnderscores = "_".repeat(length - strippedLeading.length)
+        val strippedTrailing = strippedLeading.trimEnd('_')
+        val trailingUnderscores = "_".repeat(strippedLeading.length - strippedTrailing.length)
+        return if (strippedTrailing.isEmpty()) leadingUnderscores + trailingUnderscores
+        else leadingUnderscores + strippedTrailing.pascalCase().decapitalized() + trailingUnderscores
     }
 
     fun String.toModelClassName(parentModelName: String = ""): String = parentModelName + this.pascalCase()

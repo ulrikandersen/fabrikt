@@ -27,6 +27,12 @@ components:
           type: string
         _foo:
           $ref: "#/components/schemas/MyCustomType"
+        foo_:
+          $ref: "#/components/schemas/MyCustomType"
+        _bar_:
+          type: string
       required:
         - foo
         - _foo
+        - foo_
+        - _bar_
