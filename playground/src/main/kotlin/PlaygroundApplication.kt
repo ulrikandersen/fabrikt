@@ -126,7 +126,7 @@ fun main() {
                     val pathParams: String = generationSettings.toQueryParams()
                     call.response.header("HX-Replace-Url", "/?$pathParams")
 
-                    val fileNames = generatedFiles.fileNames()
+                    val fileNames = generatedFiles.fileNamesWithLabels()
 
                     call.respondHtmlFragmentDiv {
                         if (generatedFiles.isEmpty()) {
@@ -150,11 +150,21 @@ fun main() {
     }.start(wait = true)
 }
 
-private fun List<GeneratedFile>.fileNames(): List<String> = this.map { generatedFile ->
+private fun List<GeneratedFile>.fileNamesWithLabels(): List<Pair<String, String>> = this.flatMap { generatedFile ->
     when (generatedFile) {
-        is KotlinSourceSet -> generatedFile.files.map { it.name }
-        is SimpleFile -> listOf(generatedFile.path.fileName.toString())
-        is ResourceFile -> listOf(generatedFile.fileName)
-        is ResourceSourceSet -> generatedFile.files.map { it.fileName }
+        is KotlinSourceSet -> {
+            val label = generatedFile.files.firstOrNull()?.packageName?.let { pkg ->
+                when {
+                    "models" in pkg -> "Model"
+                    "client" in pkg -> "Client"
+                    "controllers" in pkg -> "Controller"
+                    else -> "Config"
+                }
+            } ?: "Config"
+            generatedFile.files.map { it.name to label }
+        }
+        is SimpleFile -> listOf(generatedFile.path.fileName.toString() to "Config")
+        is ResourceFile -> listOf(generatedFile.fileName to "Config")
+        is ResourceSourceSet -> generatedFile.files.map { it.fileName to "Config" }
     }
-}.flatten()
+}
