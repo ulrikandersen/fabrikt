@@ -46,6 +46,60 @@ a, a:visited, a:hover, a:active {
     background: #3BAFDA;
 }
 
+.file-nav {
+    position: sticky;
+    top: -10px;
+    z-index: 10;
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(6px);
+    border-bottom: 1px solid #e0e0e0;
+    list-style: none;
+    padding: 8px 10px;
+    margin: -10px -10px 0 -10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.file-nav a {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 12px;
+    border: 1px solid #3BAFDA;
+    color: #3BAFDA;
+    text-decoration: none;
+    font-size: 13px;
+    white-space: nowrap;
+    transition: background 0.15s, color 0.15s;
+}
+
+.file-nav a:hover {
+    background: #3BAFDA;
+    color: #fff;
+}
+
+.file-nav a:hover .file-tag {
+    background: rgba(255,255,255,0.25);
+    color: #fff;
+}
+
+.file-tag {
+    font-size: 9px;
+    margin-left: 5px;
+    padding: 1px 4px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    vertical-align: middle;
+}
+
+.file-tag.model      { background: rgba(59,175,218,0.12); color: #3BAFDA; }
+.file-tag.client     { background: rgba(92,184,92,0.15);  color: #3d9b3d; }
+.file-tag.controller { background: rgba(240,173,78,0.2);  color: #c07f00; }
+.file-tag.config     { background: rgba(0,0,0,0.07);      color: #777; }
+
+
 .btn-generate {
     background-color: #3399CC;
     color: white;
