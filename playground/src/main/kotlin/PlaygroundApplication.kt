@@ -19,10 +19,8 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
 import kotlinx.html.a
-import kotlinx.html.classes
 import kotlinx.html.div
-import kotlinx.html.h3
-import kotlinx.html.p
+import kotlinx.html.id
 import kotlinx.html.script
 import kotlinx.html.stream.appendHTML
 import kotlinx.html.style
@@ -63,36 +61,32 @@ fun main() {
                 call.respondHtml {
                     mainLayout {
                         columnPanel(
-                            flexSizes = listOf(1.0, 1.0, 0.5),
-                            // first column
+                            flexSizes = listOf(1.0, 0.4, 1.5),
+                            // first column: spec form
                             {
                                 specForm(generationSettings)
                             },
-                            // second column
+                            // second column: file sidebar
+                            {
+                                style = "flex: 0.4; padding: 0; overflow-y: hidden; display: flex; flex-direction: column; border-left: 1px solid #e0e0e0; border-right: 1px solid #e0e0e0;"
+                                div {
+                                    id = "file-sidebar"
+                                    style = "flex: 1; overflow-y: auto; min-height: 0; padding: 10px 0;"
+                                    div(classes = "file-sidebar-empty") {
+                                        +"// Files will appear here"
+                                    }
+                                }
+                                div {
+                                    style = "flex-shrink: 0; padding: 8px 10px; border-top: 1px solid #e0e0e0; font-size: 12px; color: #999;"
+                                    a(href = "https://github.com/fabrikt-io/fabrikt", target = "_blank") {
+                                        +"Fabrikt on GitHub"
+                                    }
+                                    div { +"v${Version.GIT_VERSION}" }
+                                }
+                            },
+                            // third column: code output
                             {
                                 codeView { fileView("// Output will appear here") }
-                            },
-                            // third column
-                            {
-                                classes = classes + "flex flex-column justify-between"
-                                div {
-                                    h3 {
-                                        style = "margin-top: 0;"
-                                        +"Happy with what you see?"
-                                    }
-                                    p {
-                                        +"Embed Fabrikt in your project and start generating code from OpenAPI specs today!"
-                                    }
-                                    p {
-                                        a(href = "https://github.com/cjbooms/fabrikt", target = "_blank") {
-                                            +"Fabrikt on GitHub"
-                                        }
-                                    }
-                                }
-                                div {
-                                    style = "color: #999;"
-                                    +"Fabrikt version: ${Version.GIT_VERSION}"
-                                }
                             }
                         )
                     }
@@ -132,17 +126,27 @@ fun main() {
                         if (generatedFiles.isEmpty()) {
                             fileView("// No files generated. Try adjusting your settings.")
                         } else {
-                            fileList(fileNames)
                             generatedFiles.forEach {
                                 fileViewForFile(it)
                             }
                         }
                         script { unsafe { +"Prism.highlightAll();" } } // trigger syntax highlighting
+                        // OOB swap: update the file sidebar
+                        div {
+                            id = "file-sidebar"
+                            attributes["hx-swap-oob"] = "innerHTML"
+                            if (fileNames.isNotEmpty()) fileList(fileNames)
+                        }
                     }
                 }.onFailure { error ->
                     call.respondHtmlFragmentDiv {
-                            fileView("// Error: ${error.message}")
-                            script { unsafe { +"Prism.highlightAll();" } } // trigger syntax highlighting
+                        fileView("// Error: ${error.message}")
+                        script { unsafe { +"Prism.highlightAll();" } } // trigger syntax highlighting
+                        // OOB swap: clear the file sidebar on error
+                        div {
+                            id = "file-sidebar"
+                            attributes["hx-swap-oob"] = "innerHTML"
+                        }
                     }
                 }
             }
