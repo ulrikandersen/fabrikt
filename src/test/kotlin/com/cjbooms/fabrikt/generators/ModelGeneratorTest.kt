@@ -73,6 +73,8 @@ class ModelGeneratorTest {
         "untypedObject",
         "primitiveTypes",
         "leadingUnderscoreProperty",
+        "inlinedEnumParameter",
+        "unsupportedInlinedDefinitions",
     )
 
     @BeforeEach
