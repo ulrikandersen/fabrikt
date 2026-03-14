@@ -1,0 +1,34 @@
+openapi: "3.0.0"
+info:
+  title: Optional Request Body API
+  version: 1.0.0
+paths:
+  /items:
+    post:
+      operationId: createItem
+      summary: Create an item with an optional request body
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ItemRequest'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemResponse'
+components:
+  schemas:
+    ItemRequest:
+      type: object
+      properties:
+        name:
+          type: string
+    ItemResponse:
+      type: object
+      properties:
+        id:
+          type: string

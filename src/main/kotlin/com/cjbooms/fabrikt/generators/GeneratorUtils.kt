@@ -187,7 +187,8 @@ object GeneratorUtils {
                     it.schema.safeName().toKotlinParameterName().ifEmpty { it.schema.toVarName() },
                     requestBody.description,
                     toModelType(basePackage, KotlinTypeInfo.from(it.schema)),
-                    it.schema
+                    it.schema,
+                    requestBody.isRequired,
                 )
             }
             .distinctBy { it.schema.safeName().toKotlinParameterName().ifEmpty { it.schema.toVarName() } }
@@ -221,6 +222,7 @@ object GeneratorUtils {
                     p.description,
                     p.type,
                     p.schema,
+                    p.isRequired,
                 )
                 is RequestParameter -> RequestParameter(
                     "${p.parameterLocation}_${p.oasName}".toKotlinParameterName(),

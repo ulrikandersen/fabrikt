@@ -139,7 +139,13 @@ class KtorControllerInterfaceGenerator(
         }
 
         bodyParams.forEach { param ->
-            builder.addParameter(param.toParameterSpecBuilder().build())
+            if (param.isRequired) {
+                builder.addParameter(param.toParameterSpecBuilder().build())
+            } else {
+                builder.addParameter(
+                    ParameterSpec.builder(param.name, param.type.copy(nullable = true)).build()
+                )
+            }
         }
 
         builder.addKdoc(buildControllerFunKdoc(operation, params))
@@ -252,12 +258,21 @@ class KtorControllerInterfaceGenerator(
         }
 
         bodyParams.forEach { param ->
-            builder.addStatement(
-                "val ${param.name} = %M.%M<%T>()",
-                MemberName("io.ktor.server.application", "call"),
-                MemberName("io.ktor.server.request", "receive"),
-                param.type,
-            )
+            if (param.isRequired) {
+                builder.addStatement(
+                    "val ${param.name} = %M.%M<%T>()",
+                    MemberName("io.ktor.server.application", "call"),
+                    MemberName("io.ktor.server.request", "receive"),
+                    param.type,
+                )
+            } else {
+                builder.addStatement(
+                    "val ${param.name} = %M.%M<%T>()",
+                    MemberName("io.ktor.server.application", "call"),
+                    MemberName("io.ktor.server.request", "receiveNullable"),
+                    param.type,
+                )
+            }
         }
 
         val methodParameters =

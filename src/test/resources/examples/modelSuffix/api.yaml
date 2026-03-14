@@ -37,6 +37,7 @@ components:
           - mode3
   requestBodies:
     CreateRootTypeRequestBody:
+      required: true
       content:
         application/json:
           schema:

@@ -80,7 +80,7 @@ sealed class IncomingParameter(val oasName: String, val description: String?, va
         ParameterSpec.builder(name, type)
 }
 
-class BodyParameter(oasName: String, description: String?, type: TypeName, val schema: Schema) :
+class BodyParameter(oasName: String, description: String?, type: TypeName, val schema: Schema, val isRequired: Boolean = true) :
     IncomingParameter(oasName, description, type)
 
 class RequestParameter(
