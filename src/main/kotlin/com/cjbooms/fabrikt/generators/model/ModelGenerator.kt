@@ -576,7 +576,7 @@ class ModelGenerator(
             .addMicronautReflectionAnnotation()
             .addCompanionObject()
         for (oneOfInterface in oneOfInterfaces) {
-            val interfaceName = ModelNameRegistry.getBySchema(oneOfInterface) ?: oneOfInterface.name
+            val interfaceName = ModelNameRegistry.getBySchema(oneOfInterface) ?: ModelNameRegistry.getOrRegister(oneOfInterface)
 
             classBuilder
                 .addSuperinterface(generatedType(packages.base, interfaceName))
@@ -673,7 +673,7 @@ class ModelGenerator(
         }
 
         for (oneOfSuperInterface in oneOfSuperInterfaces) {
-            val interfaceName = ModelNameRegistry.getBySchema(oneOfSuperInterface) ?: oneOfSuperInterface.name
+            val interfaceName = ModelNameRegistry.getBySchema(oneOfSuperInterface) ?: ModelNameRegistry.getOrRegister(oneOfSuperInterface)
 
             interfaceBuilder.addSuperinterface(generatedType(packages.base, interfaceName))
         }
@@ -785,7 +785,7 @@ class ModelGenerator(
             .modifiers.remove(KModifier.DATA)
 
         for (oneOfSuperInterface in oneOfSuperInterfaces) {
-            val interfaceName = ModelNameRegistry.getBySchema(oneOfSuperInterface) ?: oneOfSuperInterface.name
+            val interfaceName = ModelNameRegistry.getBySchema(oneOfSuperInterface) ?: ModelNameRegistry.getOrRegister(oneOfSuperInterface)
 
             this.addSuperinterface(generatedType(packages.base, interfaceName))
         }
@@ -856,7 +856,7 @@ class ModelGenerator(
             )
 
         for (oneOfSuperInterface in oneOfSuperInterfaces) {
-            val interfaceName = ModelNameRegistry.getBySchema(oneOfSuperInterface) ?: oneOfSuperInterface.name
+            val interfaceName = ModelNameRegistry.getBySchema(oneOfSuperInterface) ?: ModelNameRegistry.getOrRegister(oneOfSuperInterface)
             this.addSuperinterface(generatedType(packages.base, interfaceName))
         }
 
