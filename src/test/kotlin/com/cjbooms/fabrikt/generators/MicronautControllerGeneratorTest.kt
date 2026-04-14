@@ -45,6 +45,7 @@ class MicronautControllerGeneratorTest {
         "parameterNameClash",
         "jakartaValidationAnnotations",
         "modelSuffix",
+        "tagGrouping",
     )
 
     private fun setupGithubApiTestEnv(validationAnnotations: ValidationAnnotations = JavaxValidationAnnotations) {
@@ -75,10 +76,13 @@ class MicronautControllerGeneratorTest {
             MutableSettings.updateSettings(modelSuffix = "Dto")
         }
 
+        val options = if (testCaseName == "tagGrouping") setOf(ControllerCodeGenOptionType.GROUP_BY_TAG) else emptySet()
+
         val controllers = MicronautControllerInterfaceGenerator(
             Packages(basePackage),
             api,
             JavaxValidationAnnotations,
+            options,
         ).generate().toSingleFile()
 
         assertThatGenerated(controllers.trim()).isEqualTo(pathToExpected)

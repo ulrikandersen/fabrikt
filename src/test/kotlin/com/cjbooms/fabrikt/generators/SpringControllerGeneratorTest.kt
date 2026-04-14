@@ -49,6 +49,7 @@ class SpringControllerGeneratorTest {
         "httpStatusCodeRangeDefinition",
         "multiMediaType",
         "inlinedEnumParameter",
+        "tagGrouping",
     )
 
     private fun setupGithubApiTestEnv(annotations: ValidationAnnotations = JavaxValidationAnnotations) {
@@ -76,10 +77,13 @@ class SpringControllerGeneratorTest {
             MutableSettings.updateSettings(modelSuffix = "Dto")
         }
 
+        val options = if (testCaseName == "tagGrouping") setOf(ControllerCodeGenOptionType.GROUP_BY_TAG) else emptySet()
+
         val controllers = SpringControllerInterfaceGenerator(
             Packages(basePackage),
             api,
             JavaxValidationAnnotations,
+            options,
         ).generate().toSingleFile()
 
         assertThatGenerated(controllers).isEqualTo(expectedControllers)
@@ -344,4 +348,5 @@ class SpringControllerGeneratorTest {
             assertThat(content).isEqualTo(expectedFiles[key])
         }
     }
+
 }

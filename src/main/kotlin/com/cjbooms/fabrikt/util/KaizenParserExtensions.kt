@@ -13,6 +13,11 @@ import com.reprezen.kaizen.oasparser.model3.Path
 import com.reprezen.kaizen.oasparser.model3.Schema
 import java.net.URI
 
+enum class GroupingStrategy {
+    BY_FIRST_TAG,
+    BY_FIRST_PATH_SEGMENT
+}
+
 object KaizenParserExtensions {
 
     private val invalidNames =
@@ -393,15 +398,39 @@ object KaizenParserExtensions {
             ?.path.orEmpty()
             .removeSuffix("/")
 
+    fun OpenApi3.groupedPaths(groupingStrategy: GroupingStrategy): Map<String, Map<String, Path>> = when (groupingStrategy) {
+        GroupingStrategy.BY_FIRST_PATH_SEGMENT -> groupByPathSegment()
+        GroupingStrategy.BY_FIRST_TAG -> routeToPathsByFirstTag()
+    }
+
     /**
      * Returns a Map of String to list of openapi Path objects,
      * where the String is the uri, but in pascal case suitable
      * for naming classes for controllers and services.
      */
-    fun OpenApi3.routeToPaths(): Map<String, Map<String, Path>> = paths
+    fun OpenApi3.groupByPathSegment(): Map<String, Map<String, Path>> = paths
         .map { (name, path) -> name to path }
         .groupBy { it.first.uriToClassName() }
         .mapValues { it.value.toMap() }
+
+    /**
+     * Falls back to path-segment grouping for paths with no tags.
+     * When operations on a path have different primary tags, the alphabetically-first verb's tag wins.
+     */
+    fun OpenApi3.routeToPathsByFirstTag(): Map<String, Map<String, Path>> = paths
+        .map { (route, path) -> route to path }
+        .groupBy { (route, path) ->
+            path.firstOperationTagOrNull()?.toModelClassName() ?: route.uriToClassName()
+        }
+        .mapValues { (_, entries) -> entries.toMap() }
+
+    // Alphabetical sort by verb makes grouping deterministic; Kaizen's PropertiesOverlay uses HashMap internally.
+    private fun Path.firstOperationTagOrNull(): String? =
+        operations.entries
+            .sortedBy { (verb, _) -> verb }
+            .asSequence()
+            .mapNotNull { (_, op) -> op.tags?.firstOrNull() }
+            .firstOrNull()
 
     private fun String.uriToClassName(): String = toResourceNames().joinToString("-").toModelClassName()
 

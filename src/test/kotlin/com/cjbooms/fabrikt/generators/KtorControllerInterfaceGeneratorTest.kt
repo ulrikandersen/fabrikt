@@ -45,6 +45,7 @@ class KtorControllerInterfaceGeneratorTest {
         "modelSuffix",
         "queryParameters",
         "pathParameters",
+        "tagGrouping",
     )
 
     private fun setupGithubApiTestEnv() {
@@ -78,9 +79,12 @@ class KtorControllerInterfaceGeneratorTest {
             MutableSettings.updateSettings(modelSuffix = "Dto")
         }
 
+        val options = if (testCaseName == "tagGrouping") setOf(ControllerCodeGenOptionType.GROUP_BY_TAG) else emptySet()
+
         val ktorControllers = KtorControllerInterfaceGenerator(
             Packages(basePackage),
-            api
+            api,
+            options,
         )
 
         val library = ktorControllers.generateLibrary()
@@ -265,3 +269,4 @@ class KtorControllerInterfaceGeneratorTest {
         assertThatGenerated(fileStr).isEqualTo(expectedControllers)
     }
 }
+
