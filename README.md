@@ -1,3 +1,7 @@
+<p align="center">
+  <img src=".github/assets/fabrikt-horizontal-final.png" alt="fabrikt" height="80">
+</p>
+
 # Fabrikt `/ˈfa-brikt/` - Kotlin code from OpenAPI 3
 
 * [Introduction](#introduction)
