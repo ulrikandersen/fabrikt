@@ -1,0 +1,35 @@
+name: Bug Report
+description: Report incorrect or unexpected code generation
+labels: ["bug"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Describe the problem — what did you expect to be generated and what was actually generated?
+    validations:
+      required: true
+
+  - type: textarea
+    id: spec
+    attributes:
+      label: Minimal OpenAPI Spec
+      description: Paste the smallest spec fragment that reproduces the problem.
+      render: yaml
+    validations:
+      required: true
+
+  - type: input
+    id: playground
+    attributes:
+      label: Options Used
+      description: Paste a [playground](https://try.fabrikt.io) URL with the relevant options selected, or list the flags used.
+      placeholder: https://try.fabrikt.io/?...
+
+  - type: input
+    id: version
+    attributes:
+      label: Fabrikt Version
+      placeholder: e.g. 26.3.0
+    validations:
+      required: true
