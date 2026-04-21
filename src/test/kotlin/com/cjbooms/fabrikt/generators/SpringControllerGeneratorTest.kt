@@ -50,6 +50,8 @@ class SpringControllerGeneratorTest {
         "multiMediaType",
         "inlinedEnumParameter",
         "tagGrouping",
+        "requestBodiesSchema",
+        "responsesSchema",
     )
 
     private fun setupGithubApiTestEnv(annotations: ValidationAnnotations = JavaxValidationAnnotations) {

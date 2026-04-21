@@ -1,5 +1,26 @@
 openapi: 3.0.0
+info:
+  title: Responses Schema Test
+  version: 1.0.0
+paths:
+  /things:
+    get:
+      operationId: getThing
+      tags:
+        - things
+      summary: Returns a thing using a ref-backed response — controller should use SharedModel
+      responses:
+        '200':
+          $ref: '#/components/responses/ReferencedResponse'
 components:
+  schemas:
+    SharedModel:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
   responses:
     ErrorResponse:
       description: "Response on error"
@@ -26,3 +47,9 @@ components:
             properties:
               message:
                 type: string
+    ReferencedResponse:
+      description: "Response whose schema is a $ref — should NOT generate a duplicate class"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SharedModel'
