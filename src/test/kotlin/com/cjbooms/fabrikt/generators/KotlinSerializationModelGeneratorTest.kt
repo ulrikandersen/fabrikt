@@ -33,6 +33,7 @@ class KotlinSerializationModelGeneratorTest {
     @Suppress("unused")
     private fun testCases(): Stream<String> = Stream.of(
         "discriminatedOneOf",
+        "nestedDiscriminatedHierarchy",
         "primitiveTypes",
         "normalizedNameConflation",
         "openEnum"

@@ -655,10 +655,18 @@ class ModelGenerator(
         oneOfSuperInterfaces: Set<Schema>,
         allSchemas: List<SchemaInfo>,
     ): TypeSpec = with(FunSpec.constructorBuilder()) {
+        // When inherited properties cannot have backing fields, they stay abstract in the root
+        // type and are only overridden by the concrete leaf types, so the intermediate type must
+        // not redeclare them.
+        val inheritedProperties = if (serializationAnnotations.supportsInheritedBackingProperties) {
+            properties.filter(PropertyInfo::isInherited)
+        } else {
+            emptyList()
+        }
         TypeSpec.classBuilder(generatedType(packages.base, modelName))
             .buildPolymorphicSubType(
                 schemaName,
-                properties.filter(PropertyInfo::isInherited),
+                inheritedProperties,
                 superType,
                 extensions,
                 oneOfSuperInterfaces,
@@ -674,6 +682,7 @@ class ModelGenerator(
                 allSchemas,
                 this,
             )
+            .also { serializationAnnotations.addClassAnnotation(it) }
             .build()
     }
 
@@ -805,6 +814,7 @@ class ModelGenerator(
             oneOfSuperInterfaces = oneOfSuperInterfaces,
             allSchemas = allSchemas,
         )
+        .also { serializationAnnotations.addClassAnnotation(it) }
         .build()
 
     private fun TypeSpec.Builder.buildPolymorphicSuperType(
@@ -858,7 +868,6 @@ class ModelGenerator(
             ClassSettings(ClassSettings.PolymorphyType.SUPER, extensions),
         )
 
-        serializationAnnotations.addClassAnnotation(this)
         return this
     }
 
@@ -870,7 +879,9 @@ class ModelGenerator(
         extensions: Map<String, Any>,
         oneOfSuperInterfaces: Set<Schema>,
     ): TypeSpec = TypeSpec.classBuilder(generatedType(packages.base, modelName))
-        .buildPolymorphicSubType(schemaName, properties, superType, extensions, oneOfSuperInterfaces).build()
+        .buildPolymorphicSubType(schemaName, properties, superType, extensions, oneOfSuperInterfaces)
+        .also { serializationAnnotations.addClassAnnotation(it) }
+        .build()
 
     private fun TypeSpec.Builder.buildPolymorphicSubType(
         schemaName: String,
@@ -922,7 +933,6 @@ class ModelGenerator(
             ClassSettings(ClassSettings.PolymorphyType.SUB, extensions),
         )
 
-        serializationAnnotations.addClassAnnotation(this)
         return this
     }
 
