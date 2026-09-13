@@ -8,22 +8,17 @@ import com.cjbooms.fabrikt.model.HeaderParam
 import com.cjbooms.fabrikt.model.IncomingParameter
 import com.cjbooms.fabrikt.model.KotlinTypeInfo
 import com.cjbooms.fabrikt.model.MultipartParameter
+import com.cjbooms.fabrikt.model.OpenApiSchema
 import com.cjbooms.fabrikt.model.PathParam
 import com.cjbooms.fabrikt.model.QueryParam
 import com.cjbooms.fabrikt.model.RequestParameter
 import com.cjbooms.fabrikt.util.GroupingStrategy
-import com.cjbooms.fabrikt.util.KaizenParserExtensions.isSimpleType
-import com.cjbooms.fabrikt.util.KaizenParserExtensions.safeName
 import com.cjbooms.fabrikt.util.NormalisedString.camelCase
 import com.cjbooms.fabrikt.util.NormalisedString.toKotlinParameterName
+import com.cjbooms.fabrikt.util.SchemaParserExtensions.isSimpleType
+import com.cjbooms.fabrikt.util.SchemaParserExtensions.safeName
 import com.cjbooms.fabrikt.util.capitalized
 import com.cjbooms.fabrikt.util.decapitalized
-import com.reprezen.kaizen.oasparser.model3.MediaType
-import com.reprezen.kaizen.oasparser.model3.Operation
-import com.reprezen.kaizen.oasparser.model3.Parameter
-import com.reprezen.kaizen.oasparser.model3.RequestBody
-import com.reprezen.kaizen.oasparser.model3.Response
-import com.reprezen.kaizen.oasparser.model3.Schema
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FunSpec
@@ -33,6 +28,11 @@ import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asTypeName
 import java.util.function.Predicate
+import com.cjbooms.fabrikt.model.OpenApiMediaType as MediaType
+import com.cjbooms.fabrikt.model.OpenApiOperation as Operation
+import com.cjbooms.fabrikt.model.OpenApiParameter as Parameter
+import com.cjbooms.fabrikt.model.OpenApiRequestBody as RequestBody
+import com.cjbooms.fabrikt.model.OpenApiResponse as Response
 
 object GeneratorUtils {
     /**
@@ -93,7 +93,7 @@ object GeneratorUtils {
      * It resolves the schema for the given API operation. If multiple content medias are found, then it will
      * resolve to the schema reference of the first media type.
      */
-    fun RequestBody.toBodyRequestSchema(): List<Schema> = listOfNotNull(this.getPrimaryContentMediaType()?.value?.schema)
+    fun RequestBody.toBodyRequestSchema(): List<OpenApiSchema> = listOfNotNull(this.getPrimaryContentMediaType()?.value?.schema)
 
     fun mergeParameters(
         path: List<Parameter>,
@@ -110,7 +110,7 @@ object GeneratorUtils {
         return kdoc.build()
     }
 
-    fun Schema.toKDoc(): CodeBlock? =
+    fun OpenApiSchema.toKDoc(): CodeBlock? =
         this.description
             ?.takeIf(String::isNotEmpty)
             ?.let { description ->
@@ -140,9 +140,9 @@ object GeneratorUtils {
         verb: String,
     ) = op.operationId?.camelCase() ?: "$verb $resource".toKCodeName()
 
-    fun Schema.toVarName() = this.name?.toKCodeName() ?: this.toClassName().simpleName.toKCodeName()
+    fun OpenApiSchema.toVarName() = this.name?.toKCodeName() ?: this.toClassName().simpleName.toKCodeName()
 
-    private fun Schema.toClassName() = KotlinTypeInfo.from(this).modelKClass.asTypeName()
+    private fun OpenApiSchema.toClassName() = KotlinTypeInfo.from(this).modelKClass.asTypeName()
 
     fun String.toClassName(basePackage: String) = ClassName(packageName = basePackage, this)
 
@@ -191,7 +191,10 @@ object GeneratorUtils {
             .values
             .filter(Response::hasContentMediaTypes)
 
-    fun Operation.getBodySuccessResponses(): List<Response> = getSuccessResponses().values.filter(Response::hasContentMediaTypes)
+    fun Operation.getBodySuccessResponses(): List<Response> =
+        getSuccessResponses()
+            .values
+            .filter(Response::hasContentMediaTypes)
 
     private fun Operation.getSuccessResponses(): Map<String, Response> =
         this.responses.filter { it.key.toIntOrNull()?.let { status -> status in 200..399 } ?: false }
@@ -211,14 +214,14 @@ object GeneratorUtils {
         val bodies =
             if (hasMultipartRequestBody()) {
                 // For multipart requests, create individual parameters for each part
-                requestBody?.getMultipartSchema()?.let { multipartSchema ->
-                    multipartSchema.properties?.map { (partName, partSchema) ->
+                requestBody.getMultipartSchema()?.let { multipartSchema ->
+                    multipartSchema.properties.map { (partName, partSchema) ->
                         val isBinaryFile =
                             (partSchema.format == "binary" && partSchema.type == "string") ||
                                 (
                                     partSchema.type == "array" &&
-                                        partSchema.itemsSchema?.format == "binary" &&
-                                        partSchema.itemsSchema?.type == "string"
+                                        partSchema.itemsSchema.format == "binary" &&
+                                        partSchema.itemsSchema.type == "string"
                                 )
                         val type =
                             toModelType(
@@ -399,7 +402,7 @@ object GeneratorUtils {
     /**
      * Gets the multipart/form-data schema from the RequestBody if it exists
      */
-    fun RequestBody.getMultipartSchema(): Schema? =
+    fun RequestBody.getMultipartSchema(): OpenApiSchema? =
         this.contentMediaTypes.entries
             .find { it.key.startsWith("multipart/form-data") }
             ?.value
@@ -408,7 +411,7 @@ object GeneratorUtils {
     /**
      * Checks if the given Operation has a multipart/form-data request body
      */
-    fun Operation.hasMultipartRequestBody(): Boolean = this.requestBody?.isMultipartFormData() == true
+    fun Operation.hasMultipartRequestBody(): Boolean = this.requestBody.isMultipartFormData()
 
     fun TypeName.isUnit(): Boolean = this == Unit::class.asTypeName()
 
