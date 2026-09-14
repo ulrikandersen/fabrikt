@@ -143,6 +143,7 @@ class OpenApiOperation(
     val tags: List<String> get() = kaizen.tags ?: emptyList()
     val summary: String? get() = kaizen.summary
     val description: String? get() = kaizen.description
+    val isDeprecated: Boolean get() = kaizen.isDeprecated ?: false
     val requestBody: OpenApiRequestBody get() = OpenApiRequestBody(kaizen.requestBody, isUninhabitableAt)
     val securityRequirements: List<OpenApiSecurityRequirement>
         get() = kaizen.securityRequirements?.map(::OpenApiSecurityRequirement) ?: emptyList()

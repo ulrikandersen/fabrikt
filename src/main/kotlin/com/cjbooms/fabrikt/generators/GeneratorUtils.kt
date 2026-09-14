@@ -19,6 +19,7 @@ import com.cjbooms.fabrikt.util.SchemaParserExtensions.isSimpleType
 import com.cjbooms.fabrikt.util.SchemaParserExtensions.safeName
 import com.cjbooms.fabrikt.util.capitalized
 import com.cjbooms.fabrikt.util.decapitalized
+import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FunSpec
@@ -35,6 +36,31 @@ import com.cjbooms.fabrikt.model.OpenApiRequestBody as RequestBody
 import com.cjbooms.fabrikt.model.OpenApiResponse as Response
 
 object GeneratorUtils {
+    private const val DEPRECATED_OPERATION_MESSAGE = "This API operation is deprecated."
+    private const val DEPRECATED_SCHEMA_MESSAGE = "This API schema is deprecated."
+    private const val DEPRECATED_PROPERTY_MESSAGE = "This API property is deprecated."
+
+    fun FunSpec.Builder.addDeprecation(operation: Operation): FunSpec.Builder =
+        apply {
+            if (operation.isDeprecated) addAnnotation(deprecatedAnnotation(DEPRECATED_OPERATION_MESSAGE))
+        }
+
+    fun TypeSpec.Builder.addDeprecation(schema: OpenApiSchema): TypeSpec.Builder =
+        apply {
+            if (schema.isDeprecated) addAnnotation(deprecatedAnnotation(DEPRECATED_SCHEMA_MESSAGE))
+        }
+
+    fun PropertySpec.Builder.addDeprecation(schema: OpenApiSchema): PropertySpec.Builder =
+        apply {
+            if (schema.isDeprecated) addAnnotation(deprecatedAnnotation(DEPRECATED_PROPERTY_MESSAGE))
+        }
+
+    private fun deprecatedAnnotation(message: String): AnnotationSpec =
+        AnnotationSpec
+            .builder(Deprecated::class)
+            .addMember("message = %S", message)
+            .build()
+
     /**
      * It resolves the API operation body request to its body type. If multiple content medias are found, then it will
      * resolve to the schema reference of the first media type, otherwise it assumes no request body defined for

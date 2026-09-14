@@ -5,8 +5,27 @@ import com.cjbooms.fabrikt.util.YamlUtils
 import com.reprezen.jsonoverlay.Overlay
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 
 class OpenApiModelTest {
+    @ParameterizedTest
+    @ValueSource(strings = ["3.0.4", "3.1.2", "3.2.0"])
+    fun `facades expose deprecated schemas properties and operations across OpenAPI versions`(version: String) {
+        val document = OpenApiDocumentParser.parse(deprecatedSpec.replace("VERSION", version)).asOpenApi3Document()
+        val schema = document.schemas.getValue("LegacySubject")
+
+        assertThat(schema.isDeprecated).isTrue()
+        assertThat(schema.properties.getValue("legacyId").isDeprecated).isTrue()
+        assertThat(
+            document.paths
+                .getValue("/subjects")
+                .operations
+                .getValue("get")
+                .isDeprecated,
+        ).isTrue()
+    }
+
     @Test
     fun `OpenApiSchema exposes document-aware native semantics through references`() {
         val document = OpenApiDocumentParser.parse(booleanSchemaSpec).asOpenApi3Document()
@@ -65,5 +84,30 @@ class OpenApiModelTest {
               properties:
                 forbidden:
                   ${'$'}ref: '#/components/schemas/Forbidden'
+        """.trimIndent()
+
+    private val deprecatedSpec =
+        """
+        openapi: VERSION
+        info:
+          title: Deprecated elements
+          version: 1.0.0
+        paths:
+          /subjects:
+            get:
+              operationId: findSubjects
+              deprecated: true
+              responses:
+                '204':
+                  description: No content
+        components:
+          schemas:
+            LegacySubject:
+              type: object
+              deprecated: true
+              properties:
+                legacyId:
+                  type: string
+                  deprecated: true
         """.trimIndent()
 }
