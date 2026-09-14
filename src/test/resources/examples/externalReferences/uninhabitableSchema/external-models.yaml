@@ -1,0 +1,16 @@
+openapi: 3.1.0
+paths: {}
+info:
+  title: ""
+  version: ""
+components:
+  schemas:
+    ExternalSubject:
+      type: object
+      required: [requiredImpossible, requiredReference]
+      properties:
+        optionalImpossible: false
+        requiredImpossible: false
+        requiredReference:
+          $ref: '#/components/schemas/Never'
+    Never: false
