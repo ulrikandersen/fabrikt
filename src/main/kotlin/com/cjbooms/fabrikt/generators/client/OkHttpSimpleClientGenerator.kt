@@ -2,6 +2,7 @@ package com.cjbooms.fabrikt.generators.client
 
 import com.cjbooms.fabrikt.cli.ClientCodeGenOptionType
 import com.cjbooms.fabrikt.configurations.Packages
+import com.cjbooms.fabrikt.generators.GeneratorUtils.addDeprecation
 import com.cjbooms.fabrikt.generators.GeneratorUtils.functionName
 import com.cjbooms.fabrikt.generators.GeneratorUtils.getPrimaryContentMediaType
 import com.cjbooms.fabrikt.generators.GeneratorUtils.hasMultipartRequestBody
@@ -63,6 +64,7 @@ class OkHttpSimpleClientGenerator(
                             val parameters = deriveClientParameters(path, operation, packages.base)
                             FunSpec
                                 .builder(functionName(operation, resource, verb))
+                                .addDeprecation(operation)
                                 .addModifiers(KModifier.PUBLIC)
                                 .addKdoc(operation.toKdoc(parameters))
                                 .addAnnotation(

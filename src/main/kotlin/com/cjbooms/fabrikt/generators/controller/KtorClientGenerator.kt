@@ -2,6 +2,7 @@ package com.cjbooms.fabrikt.generators.controller
 
 import com.cjbooms.fabrikt.cli.ClientCodeGenOptionType
 import com.cjbooms.fabrikt.configurations.Packages
+import com.cjbooms.fabrikt.generators.GeneratorUtils.addDeprecation
 import com.cjbooms.fabrikt.generators.GeneratorUtils.functionNameFromOperation
 import com.cjbooms.fabrikt.generators.GeneratorUtils.splitByType
 import com.cjbooms.fabrikt.generators.GeneratorUtils.toIncomingParameters
@@ -76,6 +77,7 @@ class KtorClientGenerator(
                         val clientFunctionBuilder =
                             FunSpec
                                 .builder(clientRequestFunctionName(operation, verb, pathParams))
+                                .addDeprecation(operation)
                                 .addModifiers(KModifier.SUSPEND)
                                 .returns(returnType)
                                 .addCode(

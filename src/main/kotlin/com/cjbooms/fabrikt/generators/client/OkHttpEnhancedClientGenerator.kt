@@ -2,6 +2,7 @@ package com.cjbooms.fabrikt.generators.client
 
 import com.cjbooms.fabrikt.cli.ClientCodeGenOptionType
 import com.cjbooms.fabrikt.configurations.Packages
+import com.cjbooms.fabrikt.generators.GeneratorUtils.addDeprecation
 import com.cjbooms.fabrikt.generators.GeneratorUtils.functionName
 import com.cjbooms.fabrikt.generators.GeneratorUtils.toClassName
 import com.cjbooms.fabrikt.generators.GeneratorUtils.toKCodeName
@@ -55,6 +56,7 @@ class OkHttpEnhancedClientGenerator(
                             val parameters = deriveClientParameters(path, operation, packages.base)
                             FunSpec
                                 .builder(functionName(operation, resource, verb))
+                                .addDeprecation(operation)
                                 .addModifiers(KModifier.PUBLIC)
                                 .addAnnotation(
                                     AnnotationSpec

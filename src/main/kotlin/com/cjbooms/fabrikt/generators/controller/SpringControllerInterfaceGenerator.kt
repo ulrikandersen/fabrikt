@@ -2,6 +2,7 @@ package com.cjbooms.fabrikt.generators.controller
 
 import com.cjbooms.fabrikt.cli.ControllerCodeGenOptionType
 import com.cjbooms.fabrikt.configurations.Packages
+import com.cjbooms.fabrikt.generators.GeneratorUtils.addDeprecation
 import com.cjbooms.fabrikt.generators.GeneratorUtils.groupingStrategyFrom
 import com.cjbooms.fabrikt.generators.GeneratorUtils.toIncomingParameters
 import com.cjbooms.fabrikt.generators.GeneratorUtils.toKdoc
@@ -90,6 +91,7 @@ class SpringControllerInterfaceGenerator(
         val baseFunSpec =
             FunSpec
                 .builder(methodName)
+                .addDeprecation(op)
                 .addModifiers(KModifier.ABSTRACT)
                 .addKdoc(op.toKdoc(parameters))
                 .addSpringFunAnnotation(op, verb, path.pathString)

@@ -2,6 +2,7 @@ package com.cjbooms.fabrikt.generators.controller
 
 import com.cjbooms.fabrikt.cli.ControllerCodeGenOptionType
 import com.cjbooms.fabrikt.configurations.Packages
+import com.cjbooms.fabrikt.generators.GeneratorUtils.addDeprecation
 import com.cjbooms.fabrikt.generators.GeneratorUtils.groupingStrategyFrom
 import com.cjbooms.fabrikt.generators.GeneratorUtils.isUnit
 import com.cjbooms.fabrikt.generators.GeneratorUtils.splitByType
@@ -127,6 +128,7 @@ class KtorControllerInterfaceGenerator(
         val builder =
             FunSpec
                 .builder(methodName)
+                .addDeprecation(operation)
                 .addModifiers(setOf(KModifier.SUSPEND, KModifier.ABSTRACT))
 
         val params = operation.toIncomingParameters(packages.base, path.value.parameters, emptyList())
