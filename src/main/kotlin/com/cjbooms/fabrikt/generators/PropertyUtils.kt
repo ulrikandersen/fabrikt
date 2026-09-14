@@ -1,6 +1,7 @@
 package com.cjbooms.fabrikt.generators
 
 import com.cjbooms.fabrikt.cli.JacksonNullabilityMode
+import com.cjbooms.fabrikt.generators.GeneratorUtils.addDeprecation
 import com.cjbooms.fabrikt.generators.GeneratorUtils.toKDoc
 import com.cjbooms.fabrikt.generators.TypeFactory.maybeMakeMapValueNullable
 import com.cjbooms.fabrikt.generators.model.JacksonMetadata
@@ -67,6 +68,7 @@ object PropertyUtils {
         val property =
             PropertySpec
                 .builder(name, wrappedType)
+                .addDeprecation(schema)
                 .apply {
                     if (this@addToClass is PropertyInfo.UninhabitableField) {
                         addKdoc(

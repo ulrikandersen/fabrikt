@@ -1,0 +1,32 @@
+openapi: 3.1.0
+info:
+  title: Deprecated models
+  version: 1.0.0
+paths: {}
+components:
+  schemas:
+    LegacySubject:
+      type: object
+      deprecated: true
+      required:
+        - legacyId
+      properties:
+        legacyId:
+          type: string
+          deprecated: true
+    ActiveSubject:
+      type: object
+      properties:
+        id:
+          type: string
+    LegacyStatus:
+      type: string
+      deprecated: true
+      enum:
+        - active
+        - retired
+    LegacyChoice:
+      deprecated: true
+      oneOf:
+        - $ref: '#/components/schemas/LegacySubject'
+        - $ref: '#/components/schemas/ActiveSubject'
