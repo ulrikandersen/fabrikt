@@ -280,6 +280,7 @@ Usage: <main class> [options]
 |                                |   `ENFORCE_REQUIRED_NULLABLE` - Include null values for required nullable fields |
 |                                |   `STRICT` - Combines `ENFORCE_OPTIONAL_NON_NULL` and `ENFORCE_REQUIRED_NULLABLE` for strictest contract enforcement |
 |   `--openfeign-client-name`    | Specify openfeign client name for spring-cloud-starter-openfeign. Defaults to 'fabrikt-client'. |
+|   `--operation-id-transform`   | Regex replacement applied to every operationId before it becomes a generated function name, format '<regex>:<replacement>'. Applies to clients and controllers. E.g. '.*_:' strips a prefix through the last underscore; '^V2_(.*):v2$1' rewrites a prefix. |
 |   `--output-directory`         | Allows the generation dir to be overridden. Defaults to current dir |
 |   `--output-opts`              | Select options for the output. |
 |                                | CHOOSE ANY OF: |
