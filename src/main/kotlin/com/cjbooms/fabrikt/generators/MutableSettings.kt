@@ -6,6 +6,7 @@ import com.cjbooms.fabrikt.cli.CodeGenTypeOverride
 import com.cjbooms.fabrikt.cli.CodeGenerationType
 import com.cjbooms.fabrikt.cli.ControllerCodeGenOptionType
 import com.cjbooms.fabrikt.cli.ControllerCodeGenTargetType
+import com.cjbooms.fabrikt.cli.CustomTypeMapping
 import com.cjbooms.fabrikt.cli.ExternalReferencesResolutionMode
 import com.cjbooms.fabrikt.cli.InstantLibrary
 import com.cjbooms.fabrikt.cli.JacksonNullabilityMode
@@ -34,6 +35,8 @@ object MutableSettings {
     var openfeignClientName: String = ClientCodeGenOptionType.DEFAULT_OPEN_FEIGN_CLIENT_NAME
         private set
     var typeOverrides: Set<CodeGenTypeOverride> = mutableSetOf()
+        private set
+    var customTypeMappings: List<CustomTypeMapping> = emptyList()
         private set
     var validationLibrary: ValidationLibrary = ValidationLibrary.default
         private set
@@ -80,6 +83,7 @@ object MutableSettings {
         clientTarget: ClientCodeGenTargetType = ClientCodeGenTargetType.default,
         openfeignClientName: String = ClientCodeGenOptionType.DEFAULT_OPEN_FEIGN_CLIENT_NAME,
         typeOverrides: Set<CodeGenTypeOverride> = emptySet(),
+        customTypeMappings: List<CustomTypeMapping> = emptyList(),
         validationLibrary: ValidationLibrary = ValidationLibrary.default,
         externalRefResolutionMode: ExternalReferencesResolutionMode = ExternalReferencesResolutionMode.default,
         serializationLibrary: SerializationLibrary = SerializationLibrary.default,
@@ -97,6 +101,7 @@ object MutableSettings {
         this.clientTarget = clientTarget
         this.openfeignClientName = openfeignClientName
         this.typeOverrides = typeOverrides
+        this.customTypeMappings = customTypeMappings
         this.validationLibrary = validationLibrary
         this.externalRefResolutionMode = externalRefResolutionMode
         this.serializationLibrary = serializationLibrary
