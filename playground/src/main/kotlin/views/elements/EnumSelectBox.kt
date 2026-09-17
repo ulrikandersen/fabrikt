@@ -15,7 +15,7 @@ fun FlowContent.enumSelectBox(name: String, enumValues: Array<out Enum<*>>, defa
             +name
         }
         select {
-            classes = setOf("block", "border", "p2", "rounded", "overflow-hidden")
+            classes = setOf("block", "col-12", "border", "p2", "rounded", "overflow-hidden")
             this.name = name
             if (emptyOption) {
                 option {

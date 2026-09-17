@@ -1,6 +1,8 @@
 package lib
 
 import com.cjbooms.fabrikt.cli.CodeGenerator
+import com.cjbooms.fabrikt.cli.CustomTypeMapping
+import com.cjbooms.fabrikt.cli.OperationIdTransform
 import com.cjbooms.fabrikt.configurations.Packages
 import com.cjbooms.fabrikt.generators.MutableSettings
 import com.cjbooms.fabrikt.model.Destinations
@@ -17,11 +19,16 @@ fun generateCodeSynchronized(
         modelSuffix = generationSettings.modelSuffix,
         clientOptions = generationSettings.clientOptions,
         clientTarget = generationSettings.clientTarget,
+        openfeignClientName = generationSettings.openfeignClientName,
         typeOverrides = generationSettings.typeOverrides,
+        customTypeMappings = generationSettings.parseCustomTypeMappings(),
         validationLibrary = generationSettings.validationLibrary,
         externalRefResolutionMode = generationSettings.externalRefResolutionMode,
         serializationLibrary = generationSettings.serializationLibrary,
-        outputOptions = generationSettings.outputOptions
+        instantLibrary = generationSettings.instantLibrary,
+        jacksonNullabilityMode = generationSettings.jacksonNullabilityMode,
+        outputOptions = generationSettings.outputOptions,
+        operationIdTransform = generationSettings.parseOperationIdTransform(),
     )
 
     val packages = Packages("com.example")
@@ -30,3 +37,11 @@ fun generateCodeSynchronized(
 
     generator.generate().distinct()
 }
+
+/** Same parser as `--operation-id-transform`, so the playground accepts exactly the CLI syntax. */
+private fun GenerationSettings.parseOperationIdTransform(): Pair<Regex, String>? =
+    operationIdTransform.takeIf { it.isNotBlank() }?.let { OperationIdTransform.parse(it) }
+
+/** Same parser as `--custom-type-mapping`, so the playground accepts exactly the CLI syntax. */
+private fun GenerationSettings.parseCustomTypeMappings(): List<CustomTypeMapping> =
+    customTypeMappings.map { CustomTypeMapping.parse(it) }
