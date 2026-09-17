@@ -296,7 +296,6 @@ class PathConverter : IStringConverter<Path> {
 }
 
 object OperationIdTransform {
-    /** Parses `<regex>:<replacement>`. Shared by the CLI converter and the playground. */
     fun parse(value: String): Pair<Regex, String> {
         val separatorIndex = value.indexOf(':')
         require(separatorIndex > 0) {
