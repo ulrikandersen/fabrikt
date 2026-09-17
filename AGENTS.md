@@ -15,6 +15,7 @@ User-facing docs, CLI options, and feature lists live in README.md — reference
 - Single test class: `./gradlew :test --tests "com.cjbooms.fabrikt.generators.ModelGeneratorTest"`
 - Regenerate README CLI usage: `./gradlew printCodeGenUsage`
 - After changing any `@Parameter` description in `CodeGenArgs.kt`, run `printCodeGenUsage` and replace the entire README CLI usage section with its fresh output. Never hand-edit individual table rows. Verify the diff contains only the intended change.
+- Every CLI option that affects generated code must also be reachable from the playground. When adding or renaming a `@Parameter` in `CodeGenArgs.kt`, add it to `GenerationSettings.kt` (field, request parsing, query-param output), pass it through in `GenerateCodeSynchronized.kt`, and add a control in `SpecForm.kt`. `CliArgsReachableFromPlaygroundTest` in `playground/` enforces this and fails on any gap. Options that only make sense for a local CLI run (file paths, remote fetching) are listed there with a reason. Run `./gradlew :playground:test` after the change.
 
 ## Layout
 

@@ -7,6 +7,8 @@ import com.cjbooms.fabrikt.cli.CodeGenerationType
 import com.cjbooms.fabrikt.cli.ControllerCodeGenOptionType
 import com.cjbooms.fabrikt.cli.ControllerCodeGenTargetType
 import com.cjbooms.fabrikt.cli.ExternalReferencesResolutionMode
+import com.cjbooms.fabrikt.cli.InstantLibrary
+import com.cjbooms.fabrikt.cli.JacksonNullabilityMode
 import com.cjbooms.fabrikt.cli.ModelCodeGenOptionType
 import com.cjbooms.fabrikt.cli.OutputOptionType
 import com.cjbooms.fabrikt.cli.SerializationLibrary
@@ -21,13 +23,18 @@ class GenerationSettingsTest {
         val settings = GenerationSettings(
             genTypes = setOf(CodeGenerationType.HTTP_MODELS),
             serializationLibrary = SerializationLibrary.KOTLINX_SERIALIZATION,
+            instantLibrary = InstantLibrary.KOTLIN_TIME_INSTANT,
+            jacksonNullabilityMode = JacksonNullabilityMode.STRICT,
             modelOptions = setOf(ModelCodeGenOptionType.SEALED_INTERFACES_FOR_ONE_OF),
             controllerTarget = ControllerCodeGenTargetType.KTOR,
             controllerOptions = setOf(ControllerCodeGenOptionType.AUTHENTICATION),
             modelSuffix = "Model",
             clientOptions = setOf(ClientCodeGenOptionType.RESILIENCE4J),
             clientTarget = ClientCodeGenTargetType.OK_HTTP,
+            openfeignClientName = "my-client",
+            operationIdTransform = "^V2_(.*):v2$1",
             typeOverrides = setOf(CodeGenTypeOverride.DATETIME_AS_INSTANT),
+            customTypeMappings = listOf("string:uuid=java.util.UUID", "string:money=com.example.Money"),
             validationLibrary = ValidationLibrary.JAVAX_VALIDATION,
             externalRefResolutionMode = ExternalReferencesResolutionMode.TARGETED,
             outputOptions = setOf(OutputOptionType.ADD_FILE_DISCLAIMER),
@@ -39,13 +46,19 @@ class GenerationSettingsTest {
         assertEquals("""
             genTypes=HTTP_MODELS
             &serializationLibrary=KOTLINX_SERIALIZATION
+            &instantLibrary=KOTLIN_TIME_INSTANT
+            &jacksonNullabilityMode=STRICT
             &modelOptions=SEALED_INTERFACES_FOR_ONE_OF
             &controllerTarget=KTOR
             &controllerOptions=AUTHENTICATION
             &modelSuffix=Model
             &clientOptions=RESILIENCE4J
             &clientTarget=OK_HTTP
+            &openfeignClientName=my-client
+            &operationIdTransform=%5EV2_%28.%2A%29%3Av2%241
             &typeOverrides=DATETIME_AS_INSTANT
+            &customTypeMappings=string%3Auuid%3Djava.util.UUID
+            &customTypeMappings=string%3Amoney%3Dcom.example.Money
             &validationLibrary=JAVAX_VALIDATION
             &externalRefResolutionMode=TARGETED
             &outputOptions=ADD_FILE_DISCLAIMER

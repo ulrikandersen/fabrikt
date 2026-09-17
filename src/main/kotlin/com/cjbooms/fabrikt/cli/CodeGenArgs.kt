@@ -295,8 +295,8 @@ class PathConverter : IStringConverter<Path> {
         }
 }
 
-class OperationIdTransformConverter : IStringConverter<Pair<Regex, String>> {
-    override fun convert(value: String): Pair<Regex, String> {
+object OperationIdTransform {
+    fun parse(value: String): Pair<Regex, String> {
         val separatorIndex = value.indexOf(':')
         require(separatorIndex > 0) {
             "--operation-id-transform must be of the form '<regex>:<replacement>' (got '$value'). " +
@@ -310,6 +310,10 @@ class OperationIdTransformConverter : IStringConverter<Pair<Regex, String>> {
             throw ParameterException("Invalid regex in --operation-id-transform: '$pattern' (${e.message})")
         }
     }
+}
+
+class OperationIdTransformConverter : IStringConverter<Pair<Regex, String>> {
+    override fun convert(value: String): Pair<Regex, String> = OperationIdTransform.parse(value)
 }
 
 inline fun <reified T : Enum<T>> convertToEnumValue(value: String): T =

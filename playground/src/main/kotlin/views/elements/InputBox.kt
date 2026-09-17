@@ -11,6 +11,6 @@ fun FlowContent.inputBox(name: String, placeholder: String = "", currentValue: S
             htmlFor = name
             +name
         }
-        input(classes = "block w-100 border p2 rounded") { this.name = name; this.placeholder = placeholder; value = currentValue }
+        input(classes = "block col-12 border p2 rounded") { this.name = name; this.placeholder = placeholder; value = currentValue }
     }
 }

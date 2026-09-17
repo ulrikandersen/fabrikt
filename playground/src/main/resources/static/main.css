@@ -123,3 +123,18 @@ a, a:visited, a:hover, a:active {
 .htmx-request {
     cursor: wait;
 }
+
+/* short instruction rendered under a form label */
+.hint {
+  color: #666;
+}
+
+/* full-width form controls must include padding and border in their width */
+input, select, textarea {
+  box-sizing: border-box;
+}
+
+textarea {
+  font-family: monospace;
+  resize: vertical;
+}

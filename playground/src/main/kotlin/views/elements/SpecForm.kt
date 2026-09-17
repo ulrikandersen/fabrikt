@@ -7,6 +7,8 @@ import com.cjbooms.fabrikt.cli.CodeGenerationType
 import com.cjbooms.fabrikt.cli.ControllerCodeGenOptionType
 import com.cjbooms.fabrikt.cli.ControllerCodeGenTargetType
 import com.cjbooms.fabrikt.cli.ExternalReferencesResolutionMode
+import com.cjbooms.fabrikt.cli.InstantLibrary
+import com.cjbooms.fabrikt.cli.JacksonNullabilityMode
 import com.cjbooms.fabrikt.cli.ModelCodeGenOptionType
 import com.cjbooms.fabrikt.cli.OutputOptionType
 import com.cjbooms.fabrikt.cli.SerializationLibrary
@@ -54,17 +56,29 @@ fun FlowContent.specForm(settings: GenerationSettings) = div {
 
         div("h3 mt3 mb1") { +"Model Options" }
         enumSelectBox("serializationLibrary", SerializationLibrary.values(), settings.serializationLibrary.name)
+        enumSelectBox("instantLibrary", InstantLibrary.values(), settings.instantLibrary.name)
+        enumSelectBox("jacksonNullabilityMode", JacksonNullabilityMode.values(), settings.jacksonNullabilityMode.name)
         enumCheckboxes("modelOptions", ModelCodeGenOptionType.values(), settings.modelOptions.map { it.name }.toSet())
         inputBox("modelSuffix", "Dto", settings.modelSuffix)
         enumCheckboxes("typeOverrides", CodeGenTypeOverride.values(), settings.typeOverrides.map { it.name }.toSet())
+        textAreaBox(
+            "customTypeMappings",
+            "One mapping per line: type:format=KotlinFqcn, optionally followed by ;kotlinx=SerializerFqcn",
+            "string:uuid=java.util.UUID\nstring:money=com.example.Money;kotlinx=com.example.MoneySerializer",
+            settings.customTypeMappings.joinToString("\n"),
+        )
 
         div("h3 mt3 mb1") { +"Client Options" }
         enumSelectBox("clientTarget", ClientCodeGenTargetType.values(), settings.clientTarget.name)
         enumCheckboxes("clientOptions", ClientCodeGenOptionType.values(), settings.clientOptions.map { it.name }.toSet())
+        inputBox("openfeignClientName", "fabrikt-client", settings.openfeignClientName)
 
         div("h3 mt3 mb1") { +"Server Options" }
         enumSelectBox("controllerTarget", ControllerCodeGenTargetType.values(), settings.controllerTarget.name)
         enumCheckboxes("controllerOptions", ControllerCodeGenOptionType.values(), settings.controllerOptions.map { it.name }.toSet())
+
+        div("h3 mt3 mb1") { +"Operation Options" }
+        inputBox("operationIdTransform", "<regex>:<replacement>, e.g. ^V2_(.*):v2\$1", settings.operationIdTransform)
 
         div("h3 mt3 mb1") { +"Validation Options" }
         enumSelectBox("validationLibrary", ValidationLibrary.values(), settings.validationLibrary.name)

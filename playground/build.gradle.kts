@@ -29,6 +29,7 @@ dependencies {
     implementation(libs.kotlinpoet) { exclude(module = "kotlin-stdlib-jre7") }
 
     testImplementation(kotlin("test"))
+    testImplementation(libs.jcommander) // reflect over @Parameter in CodeGenArgs
 }
 
 tasks.test {
