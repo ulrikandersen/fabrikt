@@ -162,6 +162,8 @@ object ModelNameRegistry {
         return referenceToName[ref]
     }
 
+    internal fun hasPreRegisteredReference(schema: Schema): Boolean = getByReference(schema) != null
+
     private val inlineSchemaTracking: MutableMap<Schema, String> = mutableMapOf()
 
     /**

@@ -93,6 +93,38 @@ class SourceApi private constructor(
                     }.map { content -> response.key to content.value.schema }
             }
 
+        val inlineOperationResponseSchemas =
+            openApi3.paths.entries.flatMap { (pathTemplate, path) ->
+                path.operations.entries.mapNotNull { (method, operation) ->
+                    val responseSchemas =
+                        operation.responses.entries
+                            .filter { (status, _) ->
+                                status.replace('X', '0').toIntOrNull()?.let { it in 200..399 } == true
+                            }.flatMap { (_, response) -> response.contentMediaTypes.values.map { it.schema } }
+                            .distinctBy { it.jsonReference }
+
+                    responseSchemas
+                        .singleOrNull()
+                        ?.takeIf { schema ->
+                            schema.jsonPathFromRoot.contains("paths") &&
+                                schema.properties.isNotEmpty() &&
+                                schema.oneOfSchemas.isEmpty() &&
+                                schema.anyOfSchemas.isEmpty() &&
+                                schema.allOfSchemas.isEmpty()
+                        }?.let { schema ->
+                            val name =
+                                schema.title?.takeIf { it.isNotBlank() }
+                                    ?: operation.operationId?.takeIf { it.isNotBlank() }?.let { "${it}Response" }
+                                    ?: "${method}_${pathTemplate}_response"
+                            name to schema
+                        }
+                }
+            }
+
+        inlineOperationResponseSchemas.forEach { (name, schema) ->
+            ModelNameRegistry.preRegisterByReference(schema, name)
+        }
+
         inlineResponseSchemas.forEach { (name, schema) ->
             ModelNameRegistry.preRegisterByReference(schema, name)
         }
@@ -102,6 +134,7 @@ class SourceApi private constructor(
                 .map { it.key to it.value }
                 .plus(openApi3.parameters.entries.map { it.key to it.value.schema })
                 .plus(inlineResponseSchemas)
+                .plus(inlineOperationResponseSchemas)
                 .plus(inlineRequestBodySchemas)
                 .plus(inlineEnumParams)
                 .map { (key, schema) -> SchemaInfo(key, schema) }

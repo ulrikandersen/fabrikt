@@ -1,0 +1,30 @@
+openapi: 3.0.3
+info:
+  title: Inline response object
+  version: 1.0.0
+paths:
+  /widgets/{widgetId}:
+    get:
+      operationId: getWidget
+      parameters:
+        - name: widgetId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A widget
+          content:
+            application/json:
+              schema:
+                title: WidgetResponse
+                type: object
+                required:
+                  - id
+                  - name
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string

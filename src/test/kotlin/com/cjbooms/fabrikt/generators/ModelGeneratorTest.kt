@@ -30,6 +30,7 @@ import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import org.junit.jupiter.params.provider.ValueSource
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
@@ -78,6 +79,7 @@ class ModelGeneratorTest {
             "primitiveTypes",
             "leadingUnderscoreProperty",
             "inlinedEnumParameter",
+            "inlineResponseObject",
             "unsupportedInlinedDefinitions",
             "requestBodiesSchema",
             "normalizedNameConflation",
@@ -166,6 +168,40 @@ class ModelGeneratorTest {
             .areContainedInGenerated(tempFolderContents)
 
         tempDirectory.toFile().deleteRecursively()
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = ["3.0.3", "3.1.2", "3.2.0"])
+    fun `generates a named model for an inline operation response object`(openApiVersion: String) {
+        val sourceApi =
+            SourceApi(
+                """
+                openapi: $openApiVersion
+                info:
+                  title: Inline response object
+                  version: 1.0.0
+                paths:
+                  /widgets:
+                    get:
+                      operationId: getWidget
+                      responses:
+                        '200':
+                          description: A widget
+                          content:
+                            application/json:
+                              schema:
+                                type: object
+                                required: [id]
+                                properties:
+                                  id:
+                                    type: string
+                """.trimIndent(),
+            )
+
+        val models = ModelGenerator(Packages("examples.inlineResponseObject"), sourceApi).generate()
+
+        assertThat(models.files.map { it.name }).containsExactly("GetWidgetResponse")
+        assertThat(models.files.single().toString()).contains("public val id: String")
     }
 
     @Test
