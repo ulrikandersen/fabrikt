@@ -4,6 +4,7 @@ import com.cjbooms.fabrikt.cli.ControllerCodeGenOptionType
 import com.cjbooms.fabrikt.generators.model.ModelGenerator.Companion.toModelType
 import com.cjbooms.fabrikt.model.BodyParameter
 import com.cjbooms.fabrikt.model.CookieParam
+import com.cjbooms.fabrikt.model.DeprecationAnnotations
 import com.cjbooms.fabrikt.model.HeaderParam
 import com.cjbooms.fabrikt.model.IncomingParameter
 import com.cjbooms.fabrikt.model.KotlinTypeInfo
@@ -19,7 +20,6 @@ import com.cjbooms.fabrikt.util.SchemaParserExtensions.isSimpleType
 import com.cjbooms.fabrikt.util.SchemaParserExtensions.safeName
 import com.cjbooms.fabrikt.util.capitalized
 import com.cjbooms.fabrikt.util.decapitalized
-import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FunSpec
@@ -36,30 +36,20 @@ import com.cjbooms.fabrikt.model.OpenApiRequestBody as RequestBody
 import com.cjbooms.fabrikt.model.OpenApiResponse as Response
 
 object GeneratorUtils {
-    private const val DEPRECATED_OPERATION_MESSAGE = "This API operation is deprecated."
-    private const val DEPRECATED_SCHEMA_MESSAGE = "This API schema is deprecated."
-    private const val DEPRECATED_PROPERTY_MESSAGE = "This API property is deprecated."
-
     fun FunSpec.Builder.addDeprecation(operation: Operation): FunSpec.Builder =
         apply {
-            if (operation.isDeprecated) addAnnotation(deprecatedAnnotation(DEPRECATED_OPERATION_MESSAGE))
+            if (operation.isDeprecated) addAnnotation(DeprecationAnnotations.operation())
         }
 
     fun TypeSpec.Builder.addDeprecation(schema: OpenApiSchema): TypeSpec.Builder =
         apply {
-            if (schema.isDeprecated) addAnnotation(deprecatedAnnotation(DEPRECATED_SCHEMA_MESSAGE))
+            if (schema.isDeprecated) addAnnotation(DeprecationAnnotations.schema())
         }
 
     fun PropertySpec.Builder.addDeprecation(schema: OpenApiSchema): PropertySpec.Builder =
         apply {
-            if (schema.isDeprecated) addAnnotation(deprecatedAnnotation(DEPRECATED_PROPERTY_MESSAGE))
+            if (schema.isDeprecated) addAnnotation(DeprecationAnnotations.property())
         }
-
-    private fun deprecatedAnnotation(message: String): AnnotationSpec =
-        AnnotationSpec
-            .builder(Deprecated::class)
-            .addMember("message = %S", message)
-            .build()
 
     /**
      * It resolves the API operation body request to its body type. If multiple content medias are found, then it will
@@ -376,6 +366,7 @@ object GeneratorUtils {
                         maximum = p.maximum,
                         explode = p.explode,
                         defaultValue = p.defaultValue,
+                        isDeprecated = p.isDeprecated,
                     )
             }
         }

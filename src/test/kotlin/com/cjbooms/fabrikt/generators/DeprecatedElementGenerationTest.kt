@@ -15,13 +15,12 @@ import com.cjbooms.fabrikt.util.ModelNameRegistry
 import com.squareup.kotlinpoet.asClassName
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 
 class DeprecatedElementGenerationTest {
     private val packages = Packages("examples.deprecatedOperations")
-    private val sourceApi by lazy {
-        SourceApi(javaClass.getResource("/examples/deprecatedOperations/api.yaml")!!.readText())
-    }
+    private val spec by lazy { javaClass.getResource("/examples/deprecatedOperations/api.yaml")!!.readText() }
 
     @BeforeEach
     fun init() {
@@ -29,29 +28,50 @@ class DeprecatedElementGenerationTest {
         ModelNameRegistry.clear()
     }
 
-    @Test
-    fun `deprecated operations are annotated for every client and controller target`() {
+    @ParameterizedTest
+    @ValueSource(strings = ["3.0.4", "3.1.2", "3.2.0"])
+    fun `deprecated operations and parameters are annotated for every client and controller target`(version: String) {
+        val sourceApi = SourceApi(spec.replace("3.1.0", version))
         val generatedTypes =
             listOf(
-                SpringHttpInterfaceGenerator(packages, sourceApi).generate(emptySet()).clients,
-                OpenFeignInterfaceGenerator(packages, sourceApi).generate(emptySet()).clients,
-                OkHttpSimpleClientGenerator(packages, sourceApi).generateDynamicClientCode(),
-                OkHttpEnhancedClientGenerator(packages, sourceApi)
-                    .generateDynamicClientCode(setOf(ClientCodeGenOptionType.RESILIENCE4J)),
-                KtorClientGenerator(packages, sourceApi).generate(emptySet()).clients,
-                SpringControllerInterfaceGenerator(packages, sourceApi, JavaxValidationAnnotations).generate().controllers,
-                MicronautControllerInterfaceGenerator(packages, sourceApi, JavaxValidationAnnotations).generate().controllers,
-                KtorControllerInterfaceGenerator(packages, sourceApi).generate().controllers,
+                "Spring HTTP Interface" to SpringHttpInterfaceGenerator(packages, sourceApi).generate(emptySet()).clients,
+                "OpenFeign" to OpenFeignInterfaceGenerator(packages, sourceApi).generate(emptySet()).clients,
+                "OkHttp simple" to OkHttpSimpleClientGenerator(packages, sourceApi).generateDynamicClientCode(),
+                "OkHttp enhanced" to
+                    OkHttpEnhancedClientGenerator(packages, sourceApi)
+                        .generateDynamicClientCode(setOf(ClientCodeGenOptionType.RESILIENCE4J)),
+                "Ktor client" to KtorClientGenerator(packages, sourceApi).generate(emptySet()).clients,
+                "Spring controller" to
+                    SpringControllerInterfaceGenerator(packages, sourceApi, JavaxValidationAnnotations).generate().controllers,
+                "Micronaut controller" to
+                    MicronautControllerInterfaceGenerator(packages, sourceApi, JavaxValidationAnnotations).generate().controllers,
+                "Ktor controller" to KtorControllerInterfaceGenerator(packages, sourceApi).generate().controllers,
             )
 
-        generatedTypes.forEach { types ->
+        generatedTypes.forEach { (target, types) ->
             val functions = types.flatMap { it.spec.funSpecs }
             val deprecatedOperation = functions.single { it.name == "findSubject" }
             val activeOperation = functions.single { it.name == "replaceSubject" }
 
             assertThat(deprecatedOperation.annotations.map { it.typeName })
+                .`as`(target)
+                .contains(Deprecated::class.asClassName())
+            assertThat(
+                deprecatedOperation.parameters
+                    .single { it.name == "id" }
+                    .annotations
+                    .map { it.typeName },
+            ).`as`(target)
                 .contains(Deprecated::class.asClassName())
             assertThat(activeOperation.annotations.map { it.typeName })
+                .`as`(target)
+                .doesNotContain(Deprecated::class.asClassName())
+            assertThat(
+                activeOperation.parameters
+                    .single { it.name == "id" }
+                    .annotations
+                    .map { it.typeName },
+            ).`as`(target)
                 .doesNotContain(Deprecated::class.asClassName())
         }
     }

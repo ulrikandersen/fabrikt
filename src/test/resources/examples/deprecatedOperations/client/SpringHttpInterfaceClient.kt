@@ -26,7 +26,7 @@ public interface SubjectsClient {
         accept = ["application/json"],
     )
     public fun findSubject(
-        @PathVariable("id") id: String,
+        @Deprecated(message = "This API parameter is deprecated.") @PathVariable("id") id: String,
         @RequestHeader additionalHeaders: Map<String, Any> = emptyMap(),
         @RequestParam additionalQueryParameters: Map<String, Any> = emptyMap(),
     ): Subject
@@ -40,6 +40,7 @@ public interface SubjectsClient {
     @HttpExchange(
         url = "/subjects/{id}",
         method = "POST",
+        contentType = "application/json",
     )
     public fun replaceSubject(
         @RequestBody subject: Subject,

@@ -17,13 +17,13 @@ class OpenApiModelTest {
 
         assertThat(schema.isDeprecated).isTrue()
         assertThat(schema.properties.getValue("legacyId").isDeprecated).isTrue()
-        assertThat(
+        val operation =
             document.paths
                 .getValue("/subjects")
                 .operations
                 .getValue("get")
-                .isDeprecated,
-        ).isTrue()
+        assertThat(operation.isDeprecated).isTrue()
+        assertThat(operation.parameters.single().isDeprecated).isTrue()
     }
 
     @Test
@@ -97,6 +97,12 @@ class OpenApiModelTest {
             get:
               operationId: findSubjects
               deprecated: true
+              parameters:
+                - name: legacyFilter
+                  in: query
+                  deprecated: true
+                  schema:
+                    type: string
               responses:
                 '204':
                   description: No content

@@ -12,6 +12,7 @@ import com.cjbooms.fabrikt.generators.client.ClientGeneratorUtils.groupedClientP
 import com.cjbooms.fabrikt.generators.controller.ControllerGeneratorUtils.toSuccessResponseType
 import com.cjbooms.fabrikt.model.ClientType
 import com.cjbooms.fabrikt.model.Clients
+import com.cjbooms.fabrikt.model.DeprecationAnnotations
 import com.cjbooms.fabrikt.model.Destinations
 import com.cjbooms.fabrikt.model.GeneratedFile
 import com.cjbooms.fabrikt.model.IncomingParameter
@@ -351,8 +352,10 @@ class KtorClientGenerator(
                             clientFunctionBuilder.addParameter(
                                 ParameterSpec
                                     .builder(param.name, param.type.copy(nullable = !param.isRequired))
-                                    .apply { if (defaultValue != null) defaultValue(defaultValue) }
-                                    .build(),
+                                    .apply {
+                                        if (param.isDeprecated) addAnnotation(DeprecationAnnotations.parameter())
+                                        if (defaultValue != null) defaultValue(defaultValue)
+                                    }.build(),
                             )
                         }
 

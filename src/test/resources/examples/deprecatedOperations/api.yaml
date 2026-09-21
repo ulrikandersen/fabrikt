@@ -11,6 +11,7 @@ paths:
         - name: id
           in: path
           required: true
+          deprecated: true
           schema:
             type: string
       responses:

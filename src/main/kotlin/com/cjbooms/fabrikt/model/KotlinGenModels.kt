@@ -155,6 +155,7 @@ class RequestParameter(
     val maxLength: Number? = null,
     val explode: Boolean? = null,
     val defaultValue: Any? = null,
+    val isDeprecated: Boolean = false,
 ) : IncomingParameter(oasName, description, type, isRequired) {
     init {
         require(parameterLocation !is CookieParam || typeInfo.supportsCookieSerialization()) {
@@ -177,22 +178,27 @@ class RequestParameter(
         maxLength = parameter.schema.maxLength,
         explode = parameter.explode,
         defaultValue = parameter.schema.default,
+        isDeprecated = parameter.isDeprecated,
     )
 
     override val isNullable: Boolean get() = !isRequired && defaultValue == null
 
-    override fun toParameterSpecBuilder(treatAnyTypeHeadersAsStrings: Boolean): ParameterSpec.Builder =
-        if (treatAnyTypeHeadersAsStrings &&
-            parameterLocation == HeaderParam &&
-            (typeInfo == KotlinTypeInfo.AnyType || typeInfo == KotlinTypeInfo.JsonElement)
-        ) {
-            ParameterSpec.builder(
-                name = name,
-                type = if (isNullable) String::class.asTypeName().copy(nullable = true) else String::class.asTypeName(),
-            )
-        } else {
-            super.toParameterSpecBuilder(treatAnyTypeHeadersAsStrings)
-        }
+    override fun toParameterSpecBuilder(treatAnyTypeHeadersAsStrings: Boolean): ParameterSpec.Builder {
+        val builder =
+            if (treatAnyTypeHeadersAsStrings &&
+                parameterLocation == HeaderParam &&
+                (typeInfo == KotlinTypeInfo.AnyType || typeInfo == KotlinTypeInfo.JsonElement)
+            ) {
+                ParameterSpec.builder(
+                    name = name,
+                    type = if (isNullable) String::class.asTypeName().copy(nullable = true) else String::class.asTypeName(),
+                )
+            } else {
+                super.toParameterSpecBuilder(treatAnyTypeHeadersAsStrings)
+            }
+        if (isDeprecated) builder.addAnnotation(DeprecationAnnotations.parameter())
+        return builder
+    }
 }
 
 private fun KotlinTypeInfo.supportsCookieSerialization(): Boolean =

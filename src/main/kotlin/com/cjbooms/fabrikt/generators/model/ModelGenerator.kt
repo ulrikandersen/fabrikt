@@ -386,6 +386,7 @@ class ModelGenerator(
                         } else {
                             setOf(
                                 oneOfSuperInterface(
+                                    schema = it.schema,
                                     modelName = ModelNameRegistry.getOrRegister(it.schema, enclosingSchema),
                                     discriminator = it.schema.discriminator,
                                     allSchemas = sourceApi.allSchemas,
