@@ -204,6 +204,71 @@ class ModelGeneratorTest {
         assertThat(models.files.single().toString()).contains("public val id: String")
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = ["3.0.3", "3.1.2", "3.2.0"])
+    fun `generates models for inline operation parameters request bodies and response items`(openApiVersion: String) {
+        val sourceApi =
+            SourceApi(
+                """
+                openapi: $openApiVersion
+                info:
+                  title: Inline operation models
+                  version: 1.0.0
+                paths:
+                  /widgets:
+                    get:
+                      operationId: getWidgets
+                      parameters:
+                        - name: filter
+                          in: query
+                          schema:
+                            type: object
+                            properties:
+                              term:
+                                type: string
+                      responses:
+                        '200':
+                          description: Widgets
+                          content:
+                            application/json:
+                              schema:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    id:
+                                      type: string
+                    post:
+                      operationId: createWidget
+                      requestBody:
+                        required: true
+                        content:
+                          application/json:
+                            schema:
+                              allOf:
+                                - type: object
+                                  required: [name]
+                                  properties:
+                                    name:
+                                      type: string
+                                - type: object
+                                  properties:
+                                    priority:
+                                      type: integer
+                      responses:
+                        '204':
+                          description: Created
+                """.trimIndent(),
+            )
+
+        val models = ModelGenerator(Packages("examples.inlineOperationModels"), sourceApi).generate()
+
+        assertThat(models.files.map { it.name })
+            .containsExactlyInAnyOrder("GetWidgetsResponseItem", "CreateWidgetRequest", "Filter")
+        assertThat(models.files.single { it.name == "CreateWidgetRequest" }.toString())
+            .contains("public val name: String", "public val priority: Int?")
+    }
+
     @Test
     fun `open enum behaviour is unchanged when only FAULT_TOLERANT_ENUMS is enabled`() {
         // Without FAULT_TOLERANT_OPEN_ENUMS, the open enum anyOf pattern must keep its

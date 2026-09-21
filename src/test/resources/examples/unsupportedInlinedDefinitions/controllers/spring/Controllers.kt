@@ -2,6 +2,8 @@ package examples.unsupportedInlinedDefinitions.controllers
 
 import examples.unsupportedInlinedDefinitions.models.GetExampleResponseItem
 import examples.unsupportedInlinedDefinitions.models.InlineEnum
+import examples.unsupportedInlinedDefinitions.models.InlineObj
+import examples.unsupportedInlinedDefinitions.models.PostExampleRequest
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Controller
@@ -11,7 +13,6 @@ import org.springframework.web.bind.`annotation`.RequestMapping
 import org.springframework.web.bind.`annotation`.RequestMethod
 import org.springframework.web.bind.`annotation`.RequestParam
 import javax.validation.Valid
-import kotlin.Any
 import kotlin.Unit
 import kotlin.collections.List
 
@@ -32,7 +33,7 @@ public interface ExampleController {
     )
     public fun `get`(
         @RequestParam(value = "inline_enum.", required = false) inlineEnum: InlineEnum?,
-        @RequestParam(value = "inline_obj.", required = false) inlineObj: Any?,
+        @Valid @RequestParam(value = "inline_obj.", required = false) inlineObj: InlineObj?,
     ): ResponseEntity<List<GetExampleResponseItem>>
 
     /**
@@ -48,9 +49,10 @@ public interface ExampleController {
         consumes = ["application/json"],
     )
     public fun post(
-        @RequestBody @Valid requestBody: Any,
+        @RequestBody @Valid requestBody: PostExampleRequest,
         @RequestParam(
-            value = "inline_enum.",
+            value =
+                "inline_enum.",
             required = false,
         ) inlineEnum: InlineEnum?,
     ): ResponseEntity<Unit>

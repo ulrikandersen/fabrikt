@@ -67,6 +67,21 @@ class SourceApi private constructor(
             ModelNameRegistry.preRegisterByReference(schema, name)
         }
 
+        val inlineObjectParams =
+            openApi3.paths.values
+                .flatMap { path ->
+                    val allParams = path.parameters + path.operations.values.flatMap { it.parameters }
+                    allParams.mapNotNull { param ->
+                        param.schema.takeIf { it.isOperationLevelObjectOrArray() }?.let { schema ->
+                            "${param.name}${if (schema.type == OasType.Array.type) "Item" else ""}" to schema
+                        }
+                    }
+                }.distinctBy { it.second.jsonReference }
+
+        inlineObjectParams.forEach { (name, schema) ->
+            schema.preRegisterOperationModel(name)
+        }
+
         val inlineRequestBodySchemas =
             openApi3.requestBodies.entries.flatMap { requestBody ->
                 requestBody.value.contentMediaTypes.entries
@@ -105,10 +120,8 @@ class SourceApi private constructor(
 
                     responseSchemas
                         .singleOrNull()
-                        ?.takeIf { schema ->
-                            schema.jsonPathFromRoot.contains("paths") &&
-                                (schema.isDirectObject() || schema.isArrayOfDirectObjects())
-                        }?.let { schema ->
+                        ?.takeIf { it.isOperationLevelObjectOrArray() }
+                        ?.let { schema ->
                             val name =
                                 schema.title?.takeIf { it.isNotBlank() }
                                     ?: operation.operationId?.takeIf { it.isNotBlank() }?.let {
@@ -121,10 +134,36 @@ class SourceApi private constructor(
             }
 
         inlineOperationResponseSchemas.forEach { (name, schema) ->
-            val registeredName = ModelNameRegistry.preRegisterByReference(schema, name)
-            if (schema.type == OasType.Array.type) {
-                ModelNameRegistry.preRegisterReferenceAlias(schema.itemsSchema, registeredName)
+            schema.preRegisterOperationModel(name)
+        }
+
+        val inlineOperationRequestBodySchemas =
+            openApi3.paths.entries.flatMap { (pathTemplate, path) ->
+                path.operations.entries.mapNotNull { (method, operation) ->
+                    val requestSchemas =
+                        operation.requestBody.contentMediaTypes
+                            .filterKeys { !it.equals("multipart/form-data", ignoreCase = true) }
+                            .values
+                            .map { it.schema }
+                            .distinctBy { it.jsonReference }
+
+                    requestSchemas
+                        .singleOrNull()
+                        ?.takeIf { it.isOperationLevelObjectOrArray() }
+                        ?.let { schema ->
+                            val name =
+                                schema.title?.takeIf { it.isNotBlank() }
+                                    ?: operation.operationId?.takeIf { it.isNotBlank() }?.let {
+                                        "$it${if (schema.type == OasType.Array.type) "RequestItem" else "Request"}"
+                                    }
+                                    ?: "${method}_${pathTemplate}_${if (schema.type == OasType.Array.type) "request_item" else "request"}"
+                            name to schema
+                        }
+                }
             }
+
+        inlineOperationRequestBodySchemas.forEach { (name, schema) ->
+            schema.preRegisterOperationModel(name)
         }
 
         inlineResponseSchemas.forEach { (name, schema) ->
@@ -137,8 +176,10 @@ class SourceApi private constructor(
                 .plus(openApi3.parameters.entries.map { it.key to it.value.schema })
                 .plus(inlineResponseSchemas)
                 .plus(inlineOperationResponseSchemas)
+                .plus(inlineOperationRequestBodySchemas)
                 .plus(inlineRequestBodySchemas)
                 .plus(inlineEnumParams)
+                .plus(inlineObjectParams)
                 .map { (key, schema) -> SchemaInfo(key, schema) }
     }
 
@@ -161,10 +202,23 @@ class SourceApi private constructor(
     private fun OpenApiSchema.isDirectObject(): Boolean =
         properties.isNotEmpty() && oneOfSchemas.isEmpty() && anyOfSchemas.isEmpty() && allOfSchemas.isEmpty()
 
-    private fun OpenApiSchema.isArrayOfDirectObjects(): Boolean =
+    private fun OpenApiSchema.isArrayOfOperationObjects(): Boolean =
         type == OasType.Array.type &&
             itemsSchema.jsonPathFromRoot.contains("paths") &&
-            itemsSchema.isDirectObject()
+            (itemsSchema.isDirectObject() || itemsSchema.isAllOfObject())
+
+    private fun OpenApiSchema.isOperationLevelObjectOrArray(): Boolean =
+        jsonPathFromRoot.contains("paths") &&
+            (isDirectObject() || isAllOfObject() || isArrayOfOperationObjects())
+
+    private fun OpenApiSchema.isAllOfObject(): Boolean = allOfSchemas.isNotEmpty() && oneOfSchemas.isEmpty() && anyOfSchemas.isEmpty()
+
+    private fun OpenApiSchema.preRegisterOperationModel(name: String) {
+        val registeredName = ModelNameRegistry.preRegisterByReference(this, name)
+        if (type == OasType.Array.type) {
+            ModelNameRegistry.preRegisterReferenceAlias(itemsSchema, registeredName)
+        }
+    }
 
     private fun validateSchemaObjects(api: OpenApi3Document): List<ValidationError> {
         val schemaErrors =
