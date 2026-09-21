@@ -522,7 +522,9 @@ object SchemaParserExtensions {
         return isDirectProperty || isArrayItem
     }
 
-    fun Schema.isInlinedItemsSchemaUnderTopLevelArrayDefinition(): Boolean = Regex(".*/schemas/[^/]+/items$").matches(jsonPathFromRoot)
+    fun Schema.isInlinedItemsSchemaUnderTopLevelArrayDefinition(): Boolean =
+        Regex(".*/schemas/[^/]+/items$").matches(jsonPathFromRoot) ||
+            (jsonPathFromRoot.contains("/paths/") && jsonPathFromRoot.endsWith("/schema/items"))
 
     fun Schema.isInlinedOneOfUnderTopLevelArrayDefinition(): Boolean =
         isOneOfSuperInterface() && isInlinedItemsSchemaUnderTopLevelArrayDefinition()

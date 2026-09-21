@@ -1,5 +1,6 @@
 package examples.unsupportedInlinedDefinitions.controllers
 
+import examples.unsupportedInlinedDefinitions.models.GetExampleResponseItem
 import examples.unsupportedInlinedDefinitions.models.InlineEnum
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -32,7 +33,7 @@ public interface ExampleController {
     public fun `get`(
         @RequestParam(value = "inline_enum.", required = false) inlineEnum: InlineEnum?,
         @RequestParam(value = "inline_obj.", required = false) inlineObj: Any?,
-    ): ResponseEntity<List<Any>>
+    ): ResponseEntity<List<GetExampleResponseItem>>
 
     /**
      *

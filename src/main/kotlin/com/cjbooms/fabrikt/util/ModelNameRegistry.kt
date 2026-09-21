@@ -62,7 +62,7 @@ object ModelNameRegistry {
     ): String =
         buildString {
             if (enclosingSchema.qualifiesModelClassName()) {
-                append(enclosingSchema!!.toModelClassName())
+                append(getByReference(enclosingSchema!!) ?: enclosingSchema.toModelClassName())
             }
             val modelClassName = schemaInfoName?.toModelClassName() ?: safeName().toModelClassName()
             append(modelClassName)
@@ -149,12 +149,19 @@ object ModelNameRegistry {
     fun preRegisterByReference(
         schema: Schema,
         name: String,
-    ) {
+    ): String {
         val ref = schema.jsonReference
-        if (!referenceToName.containsKey(ref)) {
+        return referenceToName.getOrPut(ref) {
             val modelClassName = name.toModelClassName() + MutableSettings.modelSuffix
-            referenceToName[ref] = allocateUniqueName(modelClassName)
+            allocateUniqueName(modelClassName)
         }
+    }
+
+    fun preRegisterReferenceAlias(
+        schema: Schema,
+        registeredName: String,
+    ) {
+        referenceToName.putIfAbsent(schema.jsonReference, registeredName)
     }
 
     private fun getByReference(schema: Schema): String? {

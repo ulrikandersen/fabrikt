@@ -107,22 +107,24 @@ class SourceApi private constructor(
                         .singleOrNull()
                         ?.takeIf { schema ->
                             schema.jsonPathFromRoot.contains("paths") &&
-                                schema.properties.isNotEmpty() &&
-                                schema.oneOfSchemas.isEmpty() &&
-                                schema.anyOfSchemas.isEmpty() &&
-                                schema.allOfSchemas.isEmpty()
+                                (schema.isDirectObject() || schema.isArrayOfDirectObjects())
                         }?.let { schema ->
                             val name =
                                 schema.title?.takeIf { it.isNotBlank() }
-                                    ?: operation.operationId?.takeIf { it.isNotBlank() }?.let { "${it}Response" }
-                                    ?: "${method}_${pathTemplate}_response"
+                                    ?: operation.operationId?.takeIf { it.isNotBlank() }?.let {
+                                        "$it${if (schema.type == OasType.Array.type) "ResponseItem" else "Response"}"
+                                    }
+                                    ?: "${method}_${pathTemplate}_${if (schema.type == OasType.Array.type) "response_item" else "response"}"
                             name to schema
                         }
                 }
             }
 
         inlineOperationResponseSchemas.forEach { (name, schema) ->
-            ModelNameRegistry.preRegisterByReference(schema, name)
+            val registeredName = ModelNameRegistry.preRegisterByReference(schema, name)
+            if (schema.type == OasType.Array.type) {
+                ModelNameRegistry.preRegisterReferenceAlias(schema.itemsSchema, registeredName)
+            }
         }
 
         inlineResponseSchemas.forEach { (name, schema) ->
@@ -155,6 +157,14 @@ class SourceApi private constructor(
         }
         return current.takeIf { isInlineEnum(it) }
     }
+
+    private fun OpenApiSchema.isDirectObject(): Boolean =
+        properties.isNotEmpty() && oneOfSchemas.isEmpty() && anyOfSchemas.isEmpty() && allOfSchemas.isEmpty()
+
+    private fun OpenApiSchema.isArrayOfDirectObjects(): Boolean =
+        type == OasType.Array.type &&
+            itemsSchema.jsonPathFromRoot.contains("paths") &&
+            itemsSchema.isDirectObject()
 
     private fun validateSchemaObjects(api: OpenApi3Document): List<ValidationError> {
         val schemaErrors =
