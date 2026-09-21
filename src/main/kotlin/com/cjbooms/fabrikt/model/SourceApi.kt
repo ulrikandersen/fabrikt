@@ -133,7 +133,38 @@ class SourceApi private constructor(
                 }
             }
 
+        val inlineOperationErrorResponseSchemas =
+            openApi3.paths.entries.flatMap { (pathTemplate, path) ->
+                path.operations.entries.flatMap { (method, operation) ->
+                    operation.responses.entries
+                        .filter { (status, _) ->
+                            status.equals("default", ignoreCase = true) ||
+                                status.replace('X', '0').toIntOrNull()?.let { it in 400..599 } == true
+                        }.flatMap { (status, response) ->
+                            response.contentMediaTypes.values
+                                .map { it.schema }
+                                .distinctBy { it.jsonReference }
+                                .mapNotNull { schema ->
+                                    schema.takeIf { it.isOperationLevelObjectOrArray() }?.let {
+                                        val suffix = if (schema.type == OasType.Array.type) "Item" else ""
+                                        val name =
+                                            schema.title?.takeIf { it.isNotBlank() }
+                                                ?: operation.operationId?.takeIf { it.isNotBlank() }?.let {
+                                                    "${it}Response$status$suffix"
+                                                }
+                                                ?: "${method}_${pathTemplate}_response_${status}$suffix"
+                                        name to schema
+                                    }
+                                }
+                        }
+                }
+            }
+
         inlineOperationResponseSchemas.forEach { (name, schema) ->
+            schema.preRegisterOperationModel(name)
+        }
+
+        inlineOperationErrorResponseSchemas.forEach { (name, schema) ->
             schema.preRegisterOperationModel(name)
         }
 
@@ -176,6 +207,7 @@ class SourceApi private constructor(
                 .plus(openApi3.parameters.entries.map { it.key to it.value.schema })
                 .plus(inlineResponseSchemas)
                 .plus(inlineOperationResponseSchemas)
+                .plus(inlineOperationErrorResponseSchemas)
                 .plus(inlineOperationRequestBodySchemas)
                 .plus(inlineRequestBodySchemas)
                 .plus(inlineEnumParams)

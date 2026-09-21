@@ -80,6 +80,7 @@ class ModelGeneratorTest {
             "leadingUnderscoreProperty",
             "inlinedEnumParameter",
             "inlineResponseObject",
+            "inlineErrorResponses",
             "unsupportedInlinedDefinitions",
             "requestBodiesSchema",
             "normalizedNameConflation",
@@ -202,6 +203,25 @@ class ModelGeneratorTest {
 
         assertThat(models.files.map { it.name }).containsExactly("GetWidgetResponse")
         assertThat(models.files.single().toString()).contains("public val id: String")
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = ["3.0.3", "3.1.2", "3.2.0"])
+    fun `generates models for inline error responses`(openApiVersion: String) {
+        val spec = readTextResource("/examples/inlineErrorResponses/api.yaml").replace("3.0.3", openApiVersion)
+        val models = ModelGenerator(Packages("examples.inlineErrorResponses"), SourceApi(spec)).generate()
+
+        assertThat(models.files.map { it.name })
+            .containsExactlyInAnyOrder(
+                "GetWidgetResponse",
+                "GetWidgetResponse404",
+                "GetWidgetResponse422Item",
+                "FallbackProblem",
+            )
+        assertThat(models.files.single { it.name == "GetWidgetResponse404" }.toString())
+            .contains("public val code: String")
+        assertThat(models.files.single { it.name == "GetWidgetResponse422Item" }.toString())
+            .contains("public val reason: String")
     }
 
     @ParameterizedTest
