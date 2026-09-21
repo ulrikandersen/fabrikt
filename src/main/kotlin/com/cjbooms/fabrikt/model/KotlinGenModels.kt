@@ -196,7 +196,6 @@ class RequestParameter(
             } else {
                 super.toParameterSpecBuilder(treatAnyTypeHeadersAsStrings)
             }
-        if (isDeprecated) builder.addAnnotation(DeprecationAnnotations.parameter())
         return builder
     }
 }

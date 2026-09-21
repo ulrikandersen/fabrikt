@@ -4,6 +4,7 @@ import com.cjbooms.fabrikt.cli.ClientCodeGenOptionType
 import com.cjbooms.fabrikt.configurations.Packages
 import com.cjbooms.fabrikt.generators.GeneratorUtils.addDeprecation
 import com.cjbooms.fabrikt.generators.GeneratorUtils.functionNameFromOperation
+import com.cjbooms.fabrikt.generators.GeneratorUtils.kdocDescription
 import com.cjbooms.fabrikt.generators.GeneratorUtils.splitByType
 import com.cjbooms.fabrikt.generators.GeneratorUtils.toIncomingParameters
 import com.cjbooms.fabrikt.generators.GeneratorUtils.toKCodeName
@@ -12,7 +13,6 @@ import com.cjbooms.fabrikt.generators.client.ClientGeneratorUtils.groupedClientP
 import com.cjbooms.fabrikt.generators.controller.ControllerGeneratorUtils.toSuccessResponseType
 import com.cjbooms.fabrikt.model.ClientType
 import com.cjbooms.fabrikt.model.Clients
-import com.cjbooms.fabrikt.model.DeprecationAnnotations
 import com.cjbooms.fabrikt.model.Destinations
 import com.cjbooms.fabrikt.model.GeneratedFile
 import com.cjbooms.fabrikt.model.IncomingParameter
@@ -353,7 +353,6 @@ class KtorClientGenerator(
                                 ParameterSpec
                                     .builder(param.name, param.type.copy(nullable = !param.isRequired))
                                     .apply {
-                                        if (param.isDeprecated) addAnnotation(DeprecationAnnotations.parameter())
                                         if (defaultValue != null) defaultValue(defaultValue)
                                     }.build(),
                             )
@@ -429,7 +428,7 @@ class KtorClientGenerator(
         if (parameters.isNotEmpty()) {
             kDoc.add("Parameters:\n")
             (bodyParams + pathParams + queryParams + headerParams + cookieParams).forEach {
-                kDoc.add("\t @param %L %L\n", it.name.toKCodeName(), it.description?.trimIndent().orEmpty()).build()
+                kDoc.add("\t @param %L %L\n", it.name.toKCodeName(), it.kdocDescription(trimIndent = true)).build()
             }
         }
 

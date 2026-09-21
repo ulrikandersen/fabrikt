@@ -30,7 +30,7 @@ class DeprecatedElementGenerationTest {
 
     @ParameterizedTest
     @ValueSource(strings = ["3.0.4", "3.1.2", "3.2.0"])
-    fun `deprecated operations and parameters are annotated for every client and controller target`(version: String) {
+    fun `deprecated operations are annotated and parameters are documented for every client and controller target`(version: String) {
         val sourceApi = SourceApi(spec.replace("3.1.0", version))
         val generatedTypes =
             listOf(
@@ -62,10 +62,16 @@ class DeprecatedElementGenerationTest {
                     .annotations
                     .map { it.typeName },
             ).`as`(target)
-                .contains(Deprecated::class.asClassName())
+                .doesNotContain(Deprecated::class.asClassName())
+            assertThat(deprecatedOperation.kdoc.toString())
+                .`as`(target)
+                .contains("@param id Deprecated.")
             assertThat(activeOperation.annotations.map { it.typeName })
                 .`as`(target)
                 .doesNotContain(Deprecated::class.asClassName())
+            assertThat(activeOperation.kdoc.toString())
+                .`as`(target)
+                .doesNotContain("@param id Deprecated.")
             assertThat(
                 activeOperation.parameters
                     .single { it.name == "id" }

@@ -6,6 +6,7 @@ import com.cjbooms.fabrikt.generators.GeneratorUtils.addDeprecation
 import com.cjbooms.fabrikt.generators.GeneratorUtils.functionName
 import com.cjbooms.fabrikt.generators.GeneratorUtils.toClassName
 import com.cjbooms.fabrikt.generators.GeneratorUtils.toKCodeName
+import com.cjbooms.fabrikt.generators.GeneratorUtils.toKdoc
 import com.cjbooms.fabrikt.generators.TypeFactory
 import com.cjbooms.fabrikt.generators.client.ClientGeneratorUtils.ADDITIONAL_HEADERS_PARAMETER_NAME
 import com.cjbooms.fabrikt.generators.client.ClientGeneratorUtils.addIncomingParameters
@@ -21,6 +22,7 @@ import com.cjbooms.fabrikt.model.Destinations
 import com.cjbooms.fabrikt.model.GeneratedFile
 import com.cjbooms.fabrikt.model.IncomingParameter
 import com.cjbooms.fabrikt.model.OpenApiOperation
+import com.cjbooms.fabrikt.model.RequestParameter
 import com.cjbooms.fabrikt.model.SimpleFile
 import com.cjbooms.fabrikt.model.SourceApi
 import com.github.javaparser.utils.CodeGenerationUtils
@@ -57,7 +59,11 @@ class OkHttpEnhancedClientGenerator(
                             FunSpec
                                 .builder(functionName(operation, resource, verb))
                                 .addDeprecation(operation)
-                                .addModifiers(KModifier.PUBLIC)
+                                .apply {
+                                    if (parameters.any { it is RequestParameter && it.isDeprecated }) {
+                                        addKdoc(operation.toKdoc(parameters))
+                                    }
+                                }.addModifiers(KModifier.PUBLIC)
                                 .addAnnotation(
                                     AnnotationSpec
                                         .builder(Throws::class)

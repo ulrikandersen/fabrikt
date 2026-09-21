@@ -120,10 +120,15 @@ object GeneratorUtils {
         val kdoc = CodeBlock.builder().add("%L", "${this.summary.orEmpty()}\n${this.description.orEmpty()}\n")
 
         parameters.forEach {
-            kdoc.add("@param %L %L\n", it.name.toKCodeName(), it.description.orEmpty())
+            kdoc.add("@param %L %L\n", it.name.toKCodeName(), it.kdocDescription())
         }
 
         return kdoc.build()
+    }
+
+    fun IncomingParameter.kdocDescription(trimIndent: Boolean = false): String {
+        val description = if (trimIndent) description?.trimIndent().orEmpty() else description.orEmpty()
+        return if (this is RequestParameter && isDeprecated) "Deprecated. $description".trimEnd() else description
     }
 
     fun OpenApiSchema.toKDoc(): CodeBlock? =
