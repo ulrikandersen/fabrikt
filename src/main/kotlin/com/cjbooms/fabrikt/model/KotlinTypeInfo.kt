@@ -146,10 +146,9 @@ sealed class KotlinTypeInfo(
                     it.openApiType.equals(schema.type, ignoreCase = true) &&
                         it.format.equals(schema.format, ignoreCase = true)
                 }?.let { return Custom(it.kotlinType, it.kotlinxSerializer) }
-            if (schema.isUnsupportedComplexInlinedDefinition()) {
+            if (schema.isUnsupportedComplexInlinedDefinition() && !ModelNameRegistry.hasPreRegisteredReference(schema)) {
                 /*
-                 * Defaults to Any for complex schemas inlined under the paths section.
-                 * Necessary until support for generating inlined models like these is added.
+                 * Defaults to Any for complex schemas under paths unless SourceApi discovered and named the schema.
                  */
                 return if (schema.isEnumDefinition()) Text else getOverridableAnyType()
             }

@@ -30,6 +30,7 @@ import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import org.junit.jupiter.params.provider.ValueSource
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
@@ -79,6 +80,8 @@ class ModelGeneratorTest {
             "primitiveTypes",
             "leadingUnderscoreProperty",
             "inlinedEnumParameter",
+            "inlineResponseObject",
+            "inlineErrorResponses",
             "unsupportedInlinedDefinitions",
             "requestBodiesSchema",
             "normalizedNameConflation",
@@ -167,6 +170,124 @@ class ModelGeneratorTest {
             .areContainedInGenerated(tempFolderContents)
 
         tempDirectory.toFile().deleteRecursively()
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = ["3.0.3", "3.1.2", "3.2.0"])
+    fun `generates a named model for an inline operation response object`(openApiVersion: String) {
+        val sourceApi =
+            SourceApi(
+                """
+                openapi: $openApiVersion
+                info:
+                  title: Inline response object
+                  version: 1.0.0
+                paths:
+                  /widgets:
+                    get:
+                      operationId: getWidget
+                      responses:
+                        '200':
+                          description: A widget
+                          content:
+                            application/json:
+                              schema:
+                                type: object
+                                required: [id]
+                                properties:
+                                  id:
+                                    type: string
+                """.trimIndent(),
+            )
+
+        val models = ModelGenerator(Packages("examples.inlineResponseObject"), sourceApi).generate()
+
+        assertThat(models.files.map { it.name }).containsExactly("GetWidgetResponse")
+        assertThat(models.files.single().toString()).contains("public val id: String")
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = ["3.0.3", "3.1.2", "3.2.0"])
+    fun `generates models for inline error responses`(openApiVersion: String) {
+        val spec = readTextResource("/examples/inlineErrorResponses/api.yaml").replace("3.0.3", openApiVersion)
+        val models = ModelGenerator(Packages("examples.inlineErrorResponses"), SourceApi(spec)).generate()
+
+        assertThat(models.files.map { it.name })
+            .containsExactlyInAnyOrder(
+                "GetWidgetResponse",
+                "GetWidgetResponse404",
+                "GetWidgetResponse422Item",
+                "FallbackProblem",
+            )
+        assertThat(models.files.single { it.name == "GetWidgetResponse404" }.toString())
+            .contains("public val code: String")
+        assertThat(models.files.single { it.name == "GetWidgetResponse422Item" }.toString())
+            .contains("public val reason: String")
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = ["3.0.3", "3.1.2", "3.2.0"])
+    fun `generates models for inline operation parameters request bodies and response items`(openApiVersion: String) {
+        val sourceApi =
+            SourceApi(
+                """
+                openapi: $openApiVersion
+                info:
+                  title: Inline operation models
+                  version: 1.0.0
+                paths:
+                  /widgets:
+                    get:
+                      operationId: getWidgets
+                      parameters:
+                        - name: filter
+                          in: query
+                          schema:
+                            type: object
+                            properties:
+                              term:
+                                type: string
+                      responses:
+                        '200':
+                          description: Widgets
+                          content:
+                            application/json:
+                              schema:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    id:
+                                      type: string
+                    post:
+                      operationId: createWidget
+                      requestBody:
+                        required: true
+                        content:
+                          application/json:
+                            schema:
+                              allOf:
+                                - type: object
+                                  required: [name]
+                                  properties:
+                                    name:
+                                      type: string
+                                - type: object
+                                  properties:
+                                    priority:
+                                      type: integer
+                      responses:
+                        '204':
+                          description: Created
+                """.trimIndent(),
+            )
+
+        val models = ModelGenerator(Packages("examples.inlineOperationModels"), sourceApi).generate()
+
+        assertThat(models.files.map { it.name })
+            .containsExactlyInAnyOrder("GetWidgetsResponseItem", "CreateWidgetRequest", "Filter")
+        assertThat(models.files.single { it.name == "CreateWidgetRequest" }.toString())
+            .contains("public val name: String", "public val priority: Int?")
     }
 
     @Test

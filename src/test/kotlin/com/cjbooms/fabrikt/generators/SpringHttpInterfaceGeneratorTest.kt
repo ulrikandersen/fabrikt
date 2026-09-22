@@ -114,6 +114,20 @@ class SpringHttpInterfaceGeneratorTest {
         assertThat(clientCode).contains("contentType = \"application/vnd.example+json\"")
     }
 
+    @Test
+    fun `inline response object is used as the client return type`() {
+        val sourceApi = SourceApi(readTextResource("/examples/inlineResponseObject/api.yaml"))
+
+        val clientCode =
+            SpringHttpInterfaceGenerator(Packages("examples.inlineResponseObject"), sourceApi)
+                .generate(emptySet())
+                .clients
+                .toSingleFile()
+
+        assertThat(clientCode).contains("import examples.inlineResponseObject.models.WidgetResponse")
+        assertThat(clientCode).contains("): WidgetResponse")
+    }
+
     private fun runTestCase(
         testCaseName: String,
         clientFileName: String = "SpringHttpInterfaceClient.kt",

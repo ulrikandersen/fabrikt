@@ -51,6 +51,7 @@ class SpringControllerGeneratorTest {
             "httpStatusCodeRangeDefinition",
             "multiMediaType",
             "inlinedEnumParameter",
+            "inlineResponseObject",
             "tagGrouping",
             "requestBodiesSchema",
             "responsesSchema",
