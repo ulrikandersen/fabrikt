@@ -47,6 +47,7 @@ class ModelGeneratorTest {
             "deepNestedSharingReferences",
             "boundedModelNameCollisions",
             "defaultValues",
+            "deprecatedModels",
             "duplicatePropertyHandling",
             "enumExamples",
             "enumPolymorphicDiscriminator",

@@ -2,6 +2,7 @@ package com.cjbooms.fabrikt.generators.client
 
 import com.cjbooms.fabrikt.cli.ClientCodeGenOptionType
 import com.cjbooms.fabrikt.configurations.Packages
+import com.cjbooms.fabrikt.generators.GeneratorUtils.addDeprecation
 import com.cjbooms.fabrikt.generators.GeneratorUtils.functionName
 import com.cjbooms.fabrikt.generators.GeneratorUtils.getPrimaryContentMediaType
 import com.cjbooms.fabrikt.generators.GeneratorUtils.toKdoc
@@ -140,6 +141,7 @@ class OpenFeignInterfaceGenerator(
     ): FunSpec =
         FunSpec
             .builder(name)
+            .addDeprecation(operation)
             .addModifiers(KModifier.ABSTRACT)
             .apply { if (!hasCookieHeader) addKdoc(operation.toKdoc(parameters)) }
             .addRequestLineAnnotation(resource, verb, parameters)
@@ -200,6 +202,7 @@ class OpenFeignInterfaceGenerator(
     ): FunSpec =
         FunSpec
             .builder(name)
+            .addDeprecation(operation)
             .addKdoc(operation.toKdoc(parameters))
             .addSuspendModifier(options)
             .addIncomingParameters(parameters)

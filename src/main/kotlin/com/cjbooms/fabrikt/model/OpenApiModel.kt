@@ -143,6 +143,7 @@ class OpenApiOperation(
     val tags: List<String> get() = kaizen.tags ?: emptyList()
     val summary: String? get() = kaizen.summary
     val description: String? get() = kaizen.description
+    val isDeprecated: Boolean get() = kaizen.isDeprecated ?: false
     val requestBody: OpenApiRequestBody get() = OpenApiRequestBody(kaizen.requestBody, isUninhabitableAt)
     val securityRequirements: List<OpenApiSecurityRequirement>
         get() = kaizen.securityRequirements?.map(::OpenApiSecurityRequirement) ?: emptyList()
@@ -182,6 +183,7 @@ class OpenApiParameter(
     val `in`: String get() = kaizen.`in`
     val schema: OpenApiSchema get() = OpenApiSchema(kaizen.schema, isUninhabitableAt)
     val isRequired: Boolean get() = kaizen.isRequired ?: false
+    val isDeprecated: Boolean get() = kaizen.isDeprecated ?: false
     val description: String? get() = kaizen.description
     val explode: Boolean? get() = kaizen.explode
 

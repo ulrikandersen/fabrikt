@@ -2,8 +2,10 @@ package com.cjbooms.fabrikt.generators.controller
 
 import com.cjbooms.fabrikt.cli.ControllerCodeGenOptionType
 import com.cjbooms.fabrikt.configurations.Packages
+import com.cjbooms.fabrikt.generators.GeneratorUtils.addDeprecation
 import com.cjbooms.fabrikt.generators.GeneratorUtils.groupingStrategyFrom
 import com.cjbooms.fabrikt.generators.GeneratorUtils.isUnit
+import com.cjbooms.fabrikt.generators.GeneratorUtils.kdocDescription
 import com.cjbooms.fabrikt.generators.GeneratorUtils.splitByType
 import com.cjbooms.fabrikt.generators.GeneratorUtils.toIncomingParameters
 import com.cjbooms.fabrikt.generators.GeneratorUtils.toKCodeName
@@ -127,6 +129,7 @@ class KtorControllerInterfaceGenerator(
         val builder =
             FunSpec
                 .builder(methodName)
+                .addDeprecation(operation)
                 .addModifiers(setOf(KModifier.SUSPEND, KModifier.ABSTRACT))
 
         val params = operation.toIncomingParameters(packages.base, path.value.parameters, emptyList())
@@ -363,7 +366,7 @@ class KtorControllerInterfaceGenerator(
 
         // document parameters
         parameters.forEach {
-            kDoc.add("@param %L %L\n", it.name.toKCodeName(), it.description?.trimIndent().orEmpty()).build()
+            kDoc.add("@param %L %L\n", it.name.toKCodeName(), it.kdocDescription(trimIndent = true)).build()
         }
         if (toSuccessResponseType.isUnit()) {
             kDoc.add("@param call The Ktor application call\n")

@@ -4,6 +4,7 @@ import com.cjbooms.fabrikt.cli.ControllerCodeGenOptionType
 import com.cjbooms.fabrikt.generators.model.ModelGenerator.Companion.toModelType
 import com.cjbooms.fabrikt.model.BodyParameter
 import com.cjbooms.fabrikt.model.CookieParam
+import com.cjbooms.fabrikt.model.DeprecationAnnotations
 import com.cjbooms.fabrikt.model.HeaderParam
 import com.cjbooms.fabrikt.model.IncomingParameter
 import com.cjbooms.fabrikt.model.KotlinTypeInfo
@@ -35,6 +36,21 @@ import com.cjbooms.fabrikt.model.OpenApiRequestBody as RequestBody
 import com.cjbooms.fabrikt.model.OpenApiResponse as Response
 
 object GeneratorUtils {
+    fun FunSpec.Builder.addDeprecation(operation: Operation): FunSpec.Builder =
+        apply {
+            if (operation.isDeprecated) addAnnotation(DeprecationAnnotations.operation())
+        }
+
+    fun TypeSpec.Builder.addDeprecation(schema: OpenApiSchema): TypeSpec.Builder =
+        apply {
+            if (schema.isDeprecated) addAnnotation(DeprecationAnnotations.schema())
+        }
+
+    fun PropertySpec.Builder.addDeprecation(schema: OpenApiSchema): PropertySpec.Builder =
+        apply {
+            if (schema.isDeprecated) addAnnotation(DeprecationAnnotations.property())
+        }
+
     /**
      * It resolves the API operation body request to its body type. If multiple content medias are found, then it will
      * resolve to the schema reference of the first media type, otherwise it assumes no request body defined for
@@ -104,10 +120,15 @@ object GeneratorUtils {
         val kdoc = CodeBlock.builder().add("%L", "${this.summary.orEmpty()}\n${this.description.orEmpty()}\n")
 
         parameters.forEach {
-            kdoc.add("@param %L %L\n", it.name.toKCodeName(), it.description.orEmpty())
+            kdoc.add("@param %L %L\n", it.name.toKCodeName(), it.kdocDescription())
         }
 
         return kdoc.build()
+    }
+
+    fun IncomingParameter.kdocDescription(trimIndent: Boolean = false): String {
+        val description = if (trimIndent) description?.trimIndent().orEmpty() else description.orEmpty()
+        return if (this is RequestParameter && isDeprecated) "Deprecated. $description".trimEnd() else description
     }
 
     fun OpenApiSchema.toKDoc(): CodeBlock? =
@@ -350,6 +371,7 @@ object GeneratorUtils {
                         maximum = p.maximum,
                         explode = p.explode,
                         defaultValue = p.defaultValue,
+                        isDeprecated = p.isDeprecated,
                     )
             }
         }

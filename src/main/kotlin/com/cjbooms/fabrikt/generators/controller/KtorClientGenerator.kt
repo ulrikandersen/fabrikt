@@ -2,7 +2,9 @@ package com.cjbooms.fabrikt.generators.controller
 
 import com.cjbooms.fabrikt.cli.ClientCodeGenOptionType
 import com.cjbooms.fabrikt.configurations.Packages
+import com.cjbooms.fabrikt.generators.GeneratorUtils.addDeprecation
 import com.cjbooms.fabrikt.generators.GeneratorUtils.functionNameFromOperation
+import com.cjbooms.fabrikt.generators.GeneratorUtils.kdocDescription
 import com.cjbooms.fabrikt.generators.GeneratorUtils.splitByType
 import com.cjbooms.fabrikt.generators.GeneratorUtils.toIncomingParameters
 import com.cjbooms.fabrikt.generators.GeneratorUtils.toKCodeName
@@ -76,6 +78,7 @@ class KtorClientGenerator(
                         val clientFunctionBuilder =
                             FunSpec
                                 .builder(clientRequestFunctionName(operation, verb, pathParams))
+                                .addDeprecation(operation)
                                 .addModifiers(KModifier.SUSPEND)
                                 .returns(returnType)
                                 .addCode(
@@ -349,8 +352,9 @@ class KtorClientGenerator(
                             clientFunctionBuilder.addParameter(
                                 ParameterSpec
                                     .builder(param.name, param.type.copy(nullable = !param.isRequired))
-                                    .apply { if (defaultValue != null) defaultValue(defaultValue) }
-                                    .build(),
+                                    .apply {
+                                        if (defaultValue != null) defaultValue(defaultValue)
+                                    }.build(),
                             )
                         }
 
@@ -424,7 +428,7 @@ class KtorClientGenerator(
         if (parameters.isNotEmpty()) {
             kDoc.add("Parameters:\n")
             (bodyParams + pathParams + queryParams + headerParams + cookieParams).forEach {
-                kDoc.add("\t @param %L %L\n", it.name.toKCodeName(), it.description?.trimIndent().orEmpty()).build()
+                kDoc.add("\t @param %L %L\n", it.name.toKCodeName(), it.kdocDescription(trimIndent = true)).build()
             }
         }
 

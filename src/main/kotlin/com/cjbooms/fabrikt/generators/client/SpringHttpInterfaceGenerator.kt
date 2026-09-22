@@ -2,6 +2,7 @@ package com.cjbooms.fabrikt.generators.client
 
 import com.cjbooms.fabrikt.cli.ClientCodeGenOptionType
 import com.cjbooms.fabrikt.configurations.Packages
+import com.cjbooms.fabrikt.generators.GeneratorUtils.addDeprecation
 import com.cjbooms.fabrikt.generators.GeneratorUtils.functionName
 import com.cjbooms.fabrikt.generators.GeneratorUtils.getPrimaryContentMediaType
 import com.cjbooms.fabrikt.generators.GeneratorUtils.toKdoc
@@ -78,6 +79,7 @@ class SpringHttpInterfaceGenerator(
         val parameters = deriveClientParameters(path, operation, packages.base)
         return FunSpec
             .builder(functionName(operation, resource, verb))
+            .addDeprecation(operation)
             .addModifiers(KModifier.ABSTRACT)
             .addKdoc(operation.toKdoc(parameters))
             .addHttpExchangeAnnotation(operation, resource, parameters, verb)

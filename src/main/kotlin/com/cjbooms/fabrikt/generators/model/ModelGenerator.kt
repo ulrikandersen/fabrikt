@@ -5,6 +5,7 @@ import com.cjbooms.fabrikt.cli.JacksonNullabilityMode
 import com.cjbooms.fabrikt.cli.ModelCodeGenOptionType
 import com.cjbooms.fabrikt.configurations.Packages
 import com.cjbooms.fabrikt.generators.ClassSettings
+import com.cjbooms.fabrikt.generators.GeneratorUtils.addDeprecation
 import com.cjbooms.fabrikt.generators.GeneratorUtils.toClassName
 import com.cjbooms.fabrikt.generators.GeneratorUtils.toKDoc
 import com.cjbooms.fabrikt.generators.GeneratorUtils.toObjectTypeSpec
@@ -271,6 +272,7 @@ class ModelGenerator(
         return when {
             schemaInfo.schema.isOneOfSuperInterface() ->
                 oneOfSuperInterface(
+                    schema = schemaInfo.schema,
                     modelName = modelName,
                     discriminator = schemaInfo.schema.discriminator,
                     allSchemas = allSchemas,
@@ -289,7 +291,7 @@ class ModelGenerator(
                     schemaInfo.schema.extensions,
                     schemaInfo.schema.findOneOfSuperInterface(allSchemas.map { it.schema }),
                     allSchemas,
-                )
+                ).toBuilder().addDeprecation(schemaInfo.schema).build()
 
             schemaInfo.schema.isPolymorphicSuperType() ->
                 polymorphicSuperType(
@@ -300,7 +302,7 @@ class ModelGenerator(
                     schemaInfo.schema.extensions,
                     schemaInfo.schema.findOneOfSuperInterface(allSchemas.map { it.schema }),
                     allSchemas,
-                )
+                ).toBuilder().addDeprecation(schemaInfo.schema).build()
 
             schemaInfo.schema.isPolymorphicSubType(api) ->
                 polymorphicSubType(
@@ -310,7 +312,7 @@ class ModelGenerator(
                     schemaInfo.schema.getSuperType(api)!!.let { SchemaInfo(it.name!!, it) },
                     schemaInfo.schema.extensions,
                     schemaInfo.schema.findOneOfSuperInterface(allSchemas.map { it.schema }),
-                )
+                ).toBuilder().addDeprecation(schemaInfo.schema).build()
 
             schemaInfo.typeInfo is KotlinTypeInfo.Enum -> buildEnumClass(schemaInfo.schema, schemaInfo.typeInfo)
             else ->
@@ -344,6 +346,7 @@ class ModelGenerator(
                             it.schema.isOneOfSuperInterface() -> {
                                 setOf(
                                     oneOfSuperInterface(
+                                        schema = it.schema,
                                         modelName = ModelNameRegistry.getOrRegister(it.schema, enclosingSchema),
                                         discriminator = it.schema.discriminator,
                                         allSchemas = sourceApi.allSchemas,
@@ -383,6 +386,7 @@ class ModelGenerator(
                         } else {
                             setOf(
                                 oneOfSuperInterface(
+                                    schema = it.schema,
                                     modelName = ModelNameRegistry.getOrRegister(it.schema, enclosingSchema),
                                     discriminator = it.schema.discriminator,
                                     allSchemas = sourceApi.allSchemas,
@@ -423,6 +427,7 @@ class ModelGenerator(
                         } else if (!it.isInherited && it.schema.isOneOfSuperInterface()) {
                             setOf(
                                 oneOfSuperInterface(
+                                    schema = it.schema,
                                     modelName = ModelNameRegistry.getOrRegister(it.schema, enclosingSchema),
                                     discriminator = it.schema.discriminator,
                                     allSchemas = sourceApi.allSchemas,
@@ -446,6 +451,7 @@ class ModelGenerator(
                         if (it.schema.isOneOfSuperInterface()) {
                             setOf(
                                 oneOfSuperInterface(
+                                    schema = it.schema,
                                     modelName = ModelNameRegistry.getOrRegister(it.schema, enclosingSchema),
                                     discriminator = it.schema.discriminator,
                                     allSchemas = sourceApi.allSchemas,
@@ -501,6 +507,7 @@ class ModelGenerator(
                 items.isInlinedOneOfSuperInterface() || items.isInlinedOneOfUnderTopLevelArrayDefinition() ->
                     setOf(
                         oneOfSuperInterface(
+                            schema = items,
                             modelName = ModelNameRegistry.getOrRegister(schema, enclosingSchema),
                             discriminator = items.discriminator,
                             allSchemas = sourceApi.allSchemas,
@@ -556,6 +563,7 @@ class ModelGenerator(
         val classBuilder =
             TypeSpec
                 .enumBuilder(enumType)
+                .addDeprecation(schema)
                 .apply { schema.toKDoc()?.let { addKdoc(it) } }
                 .primaryConstructor(
                     FunSpec
@@ -685,6 +693,7 @@ class ModelGenerator(
             }
         val classBuilder =
             builder
+                .addDeprecation(schema)
                 .apply { schema.toKDoc()?.let { addKdoc(it) } }
                 .addSerializableInterface()
                 .addQuarkusReflectionAnnotation()
@@ -763,6 +772,7 @@ class ModelGenerator(
         }
 
     private fun oneOfSuperInterface(
+        schema: Schema,
         modelName: String,
         discriminator: Discriminator?,
         allSchemas: List<SchemaInfo>,
@@ -773,6 +783,7 @@ class ModelGenerator(
         val interfaceBuilder =
             TypeSpec
                 .interfaceBuilder(generatedType(packages.base, modelName))
+                .addDeprecation(schema)
                 .addModifiers(KModifier.SEALED)
 
         serializationAnnotations.addClassAnnotation(interfaceBuilder)
