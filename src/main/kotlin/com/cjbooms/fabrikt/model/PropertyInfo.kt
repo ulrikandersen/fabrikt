@@ -105,6 +105,29 @@ sealed class PropertyInfo {
             return settings.copy(markAsInherited = isInherited)
         }
 
+        private fun Map<String, String>.withDistinctJvmGetters(): Map<String, String> {
+            fun getterName(name: String): String =
+                if (name.startsWith("is") && name.length > 2 && name[2] !in 'a'..'z') {
+                    name
+                } else {
+                    "get" + name.replaceFirstChar { if (it in 'a'..'z') it.uppercaseChar() else it }
+                }
+
+            val reservedNames = values.toSet()
+            val reservedGetters = values.map(::getterName).toSet()
+            val usedGetters = mutableSetOf<String>()
+            return mapValues { (_, name) ->
+                var candidate = name
+                if (getterName(candidate) in usedGetters) {
+                    do {
+                        candidate += "_"
+                    } while (candidate in reservedNames || getterName(candidate) in reservedGetters || getterName(candidate) in usedGetters)
+                }
+                usedGetters += getterName(candidate)
+                candidate
+            }
+        }
+
         private fun Schema.getInLinedProperties(
             settings: Settings,
             api: OpenApi3,
@@ -126,6 +149,7 @@ sealed class PropertyInfo {
                             listOf(rawNames.first() to normalizedName)
                         }
                     }.toMap()
+                    .withDistinctJvmGetters()
 
             val mainProperties: List<PropertyInfo> =
                 properties

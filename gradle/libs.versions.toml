@@ -27,6 +27,10 @@ spring-framework = "6.1.0"
 
 # Micronaut
 micronaut = "3.8.7"
+micronaut-security = "3.8.3"
+micronaut-serde = "1.5.3"
+quarkus = "3.15.3"
+spring-cloud-openfeign = "4.1.0"
 
 # HTTP clients
 okhttp = "4.10.0"
@@ -91,6 +95,10 @@ spring-test = { module = "org.springframework:spring-test", version.ref = "sprin
 spring-security-web = { module = "org.springframework.security:spring-security-web", version.ref = "spring-framework" }
 spring-boot-starter-web = { module = "org.springframework.boot:spring-boot-starter-web", version.ref = "spring-boot" }
 micronaut-core = { module = "io.micronaut:micronaut-core", version.ref = "micronaut" }
+micronaut-security = { module = "io.micronaut.security:micronaut-security", version.ref = "micronaut-security" }
+micronaut-serde-api = { module = "io.micronaut.serde:micronaut-serde-api", version.ref = "micronaut-serde" }
+quarkus-core = { module = "io.quarkus:quarkus-core", version.ref = "quarkus" }
+spring-cloud-openfeign-core = { module = "org.springframework.cloud:spring-cloud-openfeign-core", version.ref = "spring-cloud-openfeign" }
 micronaut-http = { module = "io.micronaut:micronaut-http", version.ref = "micronaut" }
 okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 

@@ -1,0 +1,20 @@
+openapi: 3.0.0
+components:
+  schemas:
+    GetterNames:
+      type: object
+      properties:
+        x:
+          type: string
+        X:
+          type: string
+        X_:
+          type: string
+        x__:
+          type: string
+        isReady:
+          type: boolean
+        IsReady:
+          type: boolean
+        other:
+          type: string

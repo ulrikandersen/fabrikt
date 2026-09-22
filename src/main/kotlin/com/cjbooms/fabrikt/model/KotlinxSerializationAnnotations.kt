@@ -88,6 +88,7 @@ object KotlinxSerializationAnnotations : SerializationAnnotations {
 
     private fun needsContextualAnnotation(typeInfo: KotlinTypeInfo): Boolean =
         when (typeInfo) {
+            is KotlinTypeInfo.AnyType,
             is KotlinTypeInfo.Numeric,
             is KotlinTypeInfo.Uri,
             is KotlinTypeInfo.Uuid,

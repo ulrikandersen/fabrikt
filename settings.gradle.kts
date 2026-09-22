@@ -17,3 +17,20 @@ include(
     "end2end-tests:models-kotlinx",
     "playground",
 )
+
+listOf(
+    "jackson",
+    "jackson3",
+    "kotlinx",
+    "micronaut-models",
+    "quarkus-models",
+    "spring",
+    "micronaut",
+    "ktor-server",
+    "okhttp",
+    "okhttp-jackson3",
+    "feign",
+    "ktor-client",
+).forEach { profile ->
+    include("fixture-compilation:$profile")
+}

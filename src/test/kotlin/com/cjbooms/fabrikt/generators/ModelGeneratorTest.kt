@@ -85,6 +85,7 @@ class ModelGeneratorTest {
             "unsupportedInlinedDefinitions",
             "requestBodiesSchema",
             "normalizedNameConflation",
+            "jvmGetterNameCollisions",
             "openEnum",
         )
 

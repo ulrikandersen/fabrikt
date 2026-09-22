@@ -37,6 +37,7 @@ class KotlinSerializationModelGeneratorTest {
             "discriminatorMappingSuffix",
             "primitiveTypes",
             "normalizedNameConflation",
+            "jvmGetterNameCollisions",
             "openEnum",
             "customTypeMapping",
         )

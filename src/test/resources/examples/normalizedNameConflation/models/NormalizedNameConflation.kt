@@ -15,7 +15,7 @@ public data class NormalizedNameConflation(
    */
   @param:JsonProperty("X")
   @get:JsonProperty("X")
-  public val X: String? = null,
+  public val X_: String? = null,
   /**
    * Description of camel case fooBar
    */
@@ -39,7 +39,7 @@ public data class NormalizedNameConflation(
    */
   @param:JsonProperty("ABC")
   @get:JsonProperty("ABC")
-  public val ABC: String? = null,
+  public val ABC_: String? = null,
   /**
    * Description of a_b_c
    */

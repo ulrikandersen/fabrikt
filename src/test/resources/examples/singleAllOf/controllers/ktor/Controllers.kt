@@ -9,7 +9,7 @@ import io.ktor.server.application.call
 import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.plugins.MissingRequestParameterException
 import io.ktor.server.plugins.ParameterConversionException
-import io.ktor.server.response.respond
+import io.ktor.server.response.respondNullable
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.`get`
 import io.ktor.util.converters.ConversionService
@@ -106,18 +106,19 @@ public interface TestController {
 }
 
 /**
- * Decorator for Ktor's ApplicationCall that provides type safe variants of the [respond] functions.
+ * Decorator for Ktor's ApplicationCall that provides type safe variants of the [respondNullable]
+ * functions.
  *
  * It can be used as a drop-in replacement for [io.ktor.server.application.ApplicationCall].
  *
  * @param R The type of the response body
  */
-public class TypedApplicationCall<R : Any>(
+public class TypedApplicationCall<R>(
     private val applicationCall: ApplicationCall,
 ) : ApplicationCall by applicationCall {
     @Suppress("unused")
     public suspend inline fun <reified T : R> respondTyped(message: T) {
-        respond(message)
+        respondNullable(message)
     }
 
     @Suppress("unused")
@@ -125,6 +126,6 @@ public class TypedApplicationCall<R : Any>(
         status: HttpStatusCode,
         message: T,
     ) {
-        respond(status, message)
+        respondNullable(status, message)
     }
 }

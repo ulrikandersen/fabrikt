@@ -388,7 +388,12 @@ class KtorControllerInterfaceGenerator(
      * Implemented as a decorator for Ktor's ApplicationCall and can be used as a drop-in replacement.
      */
     private fun buildTypedApplicationCall(): ControllerLibraryType {
-        val returnType = TypeVariableName("R", Any::class)
+        val hasNullableResponse =
+            api.openApi3.paths.values.any { path ->
+                path.operations.values.any { it.toSuccessResponseType(packages.base).isNullable }
+            }
+        val returnType = TypeVariableName("R", Any::class.asTypeName().copy(nullable = hasNullableResponse))
+        val respondFunction = if (hasNullableResponse) "respondNullable" else "respond"
 
         val messageType =
             TypeVariableName("T", returnType)
@@ -415,7 +420,7 @@ class KtorControllerInterfaceGenerator(
                         .builder()
                         .add(
                             "Decorator for Ktor's ApplicationCall that provides type safe variants of the [%M] functions.\n\n",
-                            MemberName("io.ktor.server.response", "respond", isExtension = true),
+                            MemberName("io.ktor.server.response", respondFunction, isExtension = true),
                         ).add(
                             "It can be used as a drop-in replacement for [%M].\n\n",
                             MemberName("io.ktor.server.application", "ApplicationCall"),
@@ -437,7 +442,7 @@ class KtorControllerInterfaceGenerator(
                                 .builder()
                                 .addStatement(
                                     "%M(message)",
-                                    MemberName("io.ktor.server.response", "respond", isExtension = true),
+                                    MemberName("io.ktor.server.response", respondFunction, isExtension = true),
                                 ).build(),
                         ).build(),
                 ).addFunction(
@@ -457,7 +462,7 @@ class KtorControllerInterfaceGenerator(
                                 .builder()
                                 .addStatement(
                                     "%M(status, message)",
-                                    MemberName("io.ktor.server.response", "respond", isExtension = true),
+                                    MemberName("io.ktor.server.response", respondFunction, isExtension = true),
                                 ).build(),
                         ).build(),
                 ).build()
