@@ -21,6 +21,7 @@ import com.cjbooms.fabrikt.util.SchemaParserExtensions.isSchemaAbsent
 import com.cjbooms.fabrikt.util.SchemaParserExtensions.isSubTypeDeductionEnabled
 import com.cjbooms.fabrikt.util.SchemaParserExtensions.isUnsupportedComplexInlinedDefinition
 import com.cjbooms.fabrikt.util.SchemaParserExtensions.singleAggregatedAliasSchema
+import com.cjbooms.fabrikt.util.SchemaParserExtensions.singleAggregatedEnumAliasSchema
 import com.squareup.kotlinpoet.ClassName
 import java.math.BigDecimal
 import java.net.URI
@@ -146,6 +147,7 @@ sealed class KotlinTypeInfo(
                     it.openApiType.equals(schema.type, ignoreCase = true) &&
                         it.format.equals(schema.format, ignoreCase = true)
                 }?.let { return Custom(it.kotlinType, it.kotlinxSerializer) }
+            schema.singleAggregatedEnumAliasSchema()?.let { return from(it, oasKey, enclosingSchema) }
             if (schema.isUnsupportedComplexInlinedDefinition() && !ModelNameRegistry.hasPreRegisteredReference(schema)) {
                 /*
                  * Defaults to Any for complex schemas under paths unless SourceApi discovered and named the schema.

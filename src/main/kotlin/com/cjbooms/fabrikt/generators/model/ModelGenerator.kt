@@ -60,6 +60,7 @@ import com.cjbooms.fabrikt.util.SchemaParserExtensions.isSubTypeDeductionEnabled
 import com.cjbooms.fabrikt.util.SchemaParserExtensions.mappingKeyForSchemaName
 import com.cjbooms.fabrikt.util.SchemaParserExtensions.mappingKeys
 import com.cjbooms.fabrikt.util.SchemaParserExtensions.safeName
+import com.cjbooms.fabrikt.util.SchemaParserExtensions.singleAggregatedEnumAliasSchema
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FunSpec
@@ -423,7 +424,7 @@ class ModelGenerator(
 
                     is PropertyInfo.Field ->
                         if (it.typeInfo is KotlinTypeInfo.Enum && !it.isInherited) {
-                            setOf(buildEnumClass(it.schema, it.typeInfo))
+                            setOf(buildEnumClass(it.schema.singleAggregatedEnumAliasSchema() ?: it.schema, it.typeInfo))
                         } else if (!it.isInherited && it.schema.isOneOfSuperInterface()) {
                             setOf(
                                 oneOfSuperInterface(

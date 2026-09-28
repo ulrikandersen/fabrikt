@@ -1,0 +1,38 @@
+openapi: 3.0.4
+info:
+  title: Wrapped enum defaults
+  version: '1.0'
+paths: {}
+components:
+  schemas:
+    SomeEnum:
+      type: string
+      enum: [foo, bar, baz]
+    SomeObject:
+      type: object
+      properties:
+        direct:
+          $ref: '#/components/schemas/SomeEnum'
+        withDefault:
+          allOf:
+            - $ref: '#/components/schemas/SomeEnum'
+          default: baz
+          description: A wrapped enum with its own default.
+        withoutDefault:
+          allOf:
+            - $ref: '#/components/schemas/SomeEnum'
+        nullable:
+          type: string
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/SomeEnum'
+          default: baz
+        anyOfDefault:
+          anyOf:
+            - $ref: '#/components/schemas/SomeEnum'
+          default: bar
+        values:
+          type: array
+          items:
+            allOf:
+              - $ref: '#/components/schemas/SomeEnum'

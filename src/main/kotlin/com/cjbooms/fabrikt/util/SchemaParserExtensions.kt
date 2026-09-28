@@ -508,6 +508,15 @@ object SchemaParserExtensions {
         isInlinedAggregationOfExactlyOne() &&
             combinedAnyOfAndAllOfSchemas().first().let { it.name == null && it.isObjectType() }
 
+    fun Schema.singleAggregatedEnumAliasSchema(): Schema? =
+        singleAggregatedAliasSchema()?.takeIf {
+            !hasEnums() &&
+                !isEnumDefinition() &&
+                oneOfSchemas.isEmpty() &&
+                it.isEnumDefinition() &&
+                (type == null || type == it.type)
+        }
+
     /**
      * Recognises two inlining patterns:
      * - A direct property schema:              /properties/<name>
