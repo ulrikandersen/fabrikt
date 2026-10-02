@@ -235,6 +235,10 @@ This is especially true for request bodies and non-trivial parameters. Instead, 
 `oneOf` along with the flag `SEALED_INTERFACES_FOR_ONE_OF` will generate polymorphic models with sealed interfaces.
 The `discriminator` property is used by Fabrikt to determine the subtypes to be generated.
 
+### 3. Add metadata to references in OpenAPI 3.0
+
+OpenAPI 3.0 ignores extra fields beside a direct `$ref`. Wrap a referenced enum in a single-element `allOf` to give a property its own `default` or `description`; Fabrikt retains the referenced enum type and generates an enum constant for a matching default value.
+
 ## Configuration Options
 
 This section documents the available CLI parameters for controlling what gets generated. This documentation is generated using: `./gradlew printCodeGenUsage`
