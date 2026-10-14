@@ -332,7 +332,7 @@ object PropertyUtils {
         if (!info.isNullable(classSettings)) maybeAddAnnotation(validationAnnotations.nonNullAnnotation)
         when (info) {
             is PropertyInfo.Field -> {
-                if (info.typeInfo !is KotlinTypeInfo.Enum && info.typeInfo != KotlinTypeInfo.Uuid) {
+                if (info.typeInfo == KotlinTypeInfo.Text) {
                     info.pattern?.let { maybeAddAnnotation(validationAnnotations.regexPattern(it)) }
 
                     val (min, max) = Pair(info.minLength, info.maxLength)

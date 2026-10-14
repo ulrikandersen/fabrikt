@@ -3,6 +3,7 @@ package com.cjbooms.fabrikt.models.jackson
 import com.example.validation.models.AllOfEnumValue
 import com.example.validation.models.AnyOfEnumValue
 import com.example.validation.models.ConstrainedEnum
+import com.example.validation.models.DateTimeValue
 import com.example.validation.models.DecimalValue
 import com.example.validation.models.DirectEnumValue
 import com.example.validation.models.InlineEnumValue
@@ -18,6 +19,7 @@ import com.example.validation.models.StringValue
 import com.example.validation.models.TypedMapValue
 import com.example.validation.models.UuidValue
 import com.example.validation.models.ValueValue
+import com.example.validationcustomtypes.models.CustomTypeValue
 import jakarta.validation.Validation
 import jakarta.validation.ValidatorFactory
 import jakarta.validation.constraints.DecimalMax
@@ -31,12 +33,15 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
+import java.time.OffsetDateTime
+import java.util.Currency
 import java.util.UUID
 import java.util.logging.Handler
 import java.util.logging.Level
 import java.util.logging.LogRecord
 import java.util.logging.Logger
 import kotlin.reflect.KClass
+import com.example.validationstrings.models.DateTimeValue as DateTimeStringValue
 import com.example.validationstrings.models.UuidValue as UuidStringValue
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -152,6 +157,45 @@ class ModelValidationTest {
     fun `UUID as string enforces its pattern`() {
         assertViolation(
             model = UuidStringValue(value = "123E4567-E89B-12D3-A456-426614174000"),
+            propertyPath = "value",
+            constraint = Pattern::class,
+        )
+    }
+
+    @Test
+    fun `custom mapped type with string constraints validates without exceptions`() {
+        val model = CustomTypeValue(value = EUR, values = listOf(EUR))
+
+        assertThat(factory.validator.validate(model)).isEmpty()
+    }
+
+    @Test
+    fun `list of custom mapped type enforces maximum size`() {
+        assertViolation(
+            model = CustomTypeValue(value = EUR, values = listOf(EUR, USD, GBP)),
+            propertyPath = "values",
+            constraint = Size::class,
+        )
+    }
+
+    @Test
+    fun `date-time with string constraints validates without exceptions`() {
+        val model = DateTimeValue(value = OffsetDateTime.parse("2026-01-01T00:00:00Z"))
+
+        assertThat(factory.validator.validate(model)).isEmpty()
+    }
+
+    @Test
+    fun `date-time as string accepts a valid value`() {
+        val model = DateTimeStringValue(value = "2026-01-01T00:00:00Z")
+
+        assertThat(factory.validator.validate(model)).isEmpty()
+    }
+
+    @Test
+    fun `date-time as string enforces its pattern`() {
+        assertViolation(
+            model = DateTimeStringValue(value = "01/01/2026"),
             propertyPath = "value",
             constraint = Pattern::class,
         )
@@ -384,5 +428,11 @@ class ModelValidationTest {
         val violation = violations.single()
         assertThat(violation.propertyPath.toString()).isEqualTo(propertyPath)
         assertThat(violation.constraintDescriptor.annotation.annotationClass).isEqualTo(constraint)
+    }
+
+    private companion object {
+        val EUR: Currency = Currency.getInstance("EUR")
+        val USD: Currency = Currency.getInstance("USD")
+        val GBP: Currency = Currency.getInstance("GBP")
     }
 }

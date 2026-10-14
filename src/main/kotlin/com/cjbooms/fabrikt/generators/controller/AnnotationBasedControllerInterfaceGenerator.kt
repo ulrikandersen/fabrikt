@@ -4,6 +4,7 @@ import com.cjbooms.fabrikt.configurations.Packages
 import com.cjbooms.fabrikt.generators.ValidationAnnotations
 import com.cjbooms.fabrikt.model.ControllerType
 import com.cjbooms.fabrikt.model.IncomingParameter
+import com.cjbooms.fabrikt.model.KotlinTypeInfo
 import com.cjbooms.fabrikt.model.OpenApiOperation
 import com.cjbooms.fabrikt.model.OpenApiPath
 import com.cjbooms.fabrikt.model.RequestParameter
@@ -65,7 +66,8 @@ abstract class AnnotationBasedControllerInterfaceGenerator(
     fun ParameterSpec.Builder.addValidationAnnotations(parameter: RequestParameter): ParameterSpec.Builder {
         if (parameter.minimum != null) this.maybeAddAnnotation(validationAnnotations.min(parameter.minimum.toLong()))
         if (parameter.maximum != null) this.maybeAddAnnotation(validationAnnotations.max(parameter.maximum.toLong()))
-        if (parameter.minLength != null || parameter.maxLength != null) {
+        val hasLengthBounds = parameter.minLength != null || parameter.maxLength != null
+        if (parameter.typeInfo == KotlinTypeInfo.Text && hasLengthBounds) {
             this.maybeAddAnnotation(
                 (validationAnnotations.size(parameter.minLength?.toInt(), parameter.maxLength?.toInt())),
             )
