@@ -47,6 +47,10 @@ class ModelGeneratorTest {
             "sharedCompositionContracts",
             "sharedCompositionUnions",
             "sharedCompositionExternal",
+            "sharedCompositionRefinements",
+            "sharedCompositionRequestProjection",
+            "sharedCompositionResponseProjection",
+            "sharedCompositionMappedContracts",
             "namedOneOfDeduction",
             "composedOneOf",
             "additionalModelAnnotations",
@@ -114,8 +118,14 @@ class ModelGeneratorTest {
     @MethodSource("testCases")
     fun `correct models are generated for different OpenApi Specifications`(testCaseName: String) {
         print("Testcase: $testCaseName")
-        if (testCaseName in listOf("sharedCompositionContracts", "sharedCompositionUnions", "sharedCompositionExternal")) {
+        if (testCaseName.startsWith("sharedComposition")) {
             MutableSettings.addOption(ModelCodeGenOptionType.SHARED_COMPOSITION_CONTRACTS)
+        }
+        if (testCaseName == "sharedCompositionRequestProjection") {
+            MutableSettings.addOption(ModelCodeGenOptionType.EXCLUDE_READ_ONLY)
+        }
+        if (testCaseName == "sharedCompositionResponseProjection") {
+            MutableSettings.addOption(ModelCodeGenOptionType.EXCLUDE_WRITE_ONLY)
         }
         MutableSettings.addOption(ModelCodeGenOptionType.X_EXTENSIBLE_ENUMS)
         if (testCaseName == "instantDateTime") {
@@ -166,6 +176,13 @@ class ModelGeneratorTest {
             MutableSettings.updateSettings(
                 genTypes = setOf(CodeGenerationType.HTTP_MODELS),
                 customTypeMappings = listOf(CustomTypeMapping.parse("object:money=examples.customObjectMapping.Money")),
+            )
+        }
+        if (testCaseName == "sharedCompositionMappedContracts") {
+            MutableSettings.updateSettings(
+                genTypes = setOf(CodeGenerationType.HTTP_MODELS),
+                modelOptions = setOf(ModelCodeGenOptionType.SHARED_COMPOSITION_CONTRACTS),
+                customTypeMappings = listOf(CustomTypeMapping.parse("object:custom-record=external.CustomRecord")),
             )
         }
         val basePackage = "examples.${testCaseName.replace("/", ".")}"
