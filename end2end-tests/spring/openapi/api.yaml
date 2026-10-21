@@ -32,6 +32,32 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ParameterEcho"
+  /patterns:
+    get:
+      operationId: getPatterns
+      summary: Accepts string parameters with the same patterns as PatternValues
+      parameters:
+        - name: unanchored
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: '[a-zA-Z]'
+        - name: anchored
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9]+$'
+        - name: literal
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: '^\$[0-9]+[$]$'
+      responses:
+        "204":
+          description: No Content
 components:
   schemas:
     ParameterEcho:
@@ -43,3 +69,16 @@ components:
           type: integer
         filter:
           type: string
+    PatternValues:
+      type: object
+      required: [unanchored, anchored, literal]
+      properties:
+        unanchored:
+          type: string
+          pattern: '[a-zA-Z]'
+        anchored:
+          type: string
+          pattern: '^[0-9]+$'
+        literal:
+          type: string
+          pattern: '^\$[0-9]+[$]$'

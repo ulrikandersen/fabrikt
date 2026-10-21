@@ -15,6 +15,8 @@ interface ValidationAnnotations {
 
     fun max(value: Long): AnnotationSpec?
 
+    fun pattern(pattern: String): AnnotationSpec?
+
     fun regexPattern(pattern: String): AnnotationSpec?
 
     fun lengthRestriction(
@@ -93,10 +95,16 @@ abstract class PackageValidationAnnotations(
         return specBuilder.build()
     }
 
+    override fun pattern(pattern: String) =
+        AnnotationSpec
+            .builder(patternClass)
+            .addMember("regexp = %S", matchAnywhere(pattern))
+            .build()
+
     override fun regexPattern(pattern: String) =
         AnnotationSpec
             .builder(patternClass)
-            .addMember("regexp = %S", pattern)
+            .addMember("regexp = %S", matchAnywhere(pattern))
             .useSiteTarget(AnnotationSpec.UseSiteTarget.GET)
             .build()
 
@@ -141,6 +149,20 @@ abstract class PackageValidationAnnotations(
         }
 }
 
+/**
+ * An OpenAPI `pattern` is not implicitly anchored: a value is valid if the expression matches anywhere in it.
+ * `@Pattern` is checked with `Matcher.matches()`, which needs the whole value to match, so allow any text around it.
+ * `[\s\S]` keeps the meaning of `.` inside the pattern, and explicit `^`/`$` anchors still apply to the whole value.
+ * An ECMA-262 `$` is the end of input, Java's `\z`; Java's `$` also matches before a final line terminator.
+ * Escapes and character classes are copied unchanged, so an escaped or bracketed dollar sign stays literal.
+ */
+private fun matchAnywhere(pattern: String): String {
+    val strict = escapeClassOrEndAnchor.replace(pattern) { if (it.value == "$") "\\z" else it.value }
+    return "[\\s\\S]*(?:$strict)[\\s\\S]*"
+}
+
+private val escapeClassOrEndAnchor = Regex("""\\.|\[(?:\\.|[^\\\]])*]|\$""")
+
 object JavaxValidationAnnotations : PackageValidationAnnotations("javax.validation")
 
 object JakartaAnnotations : PackageValidationAnnotations("jakarta.validation")
@@ -160,6 +182,8 @@ object NoValidationAnnotations : ValidationAnnotations {
         min: Int?,
         max: Int?,
     ): AnnotationSpec? = null
+
+    override fun pattern(pattern: String): AnnotationSpec? = null
 
     override fun regexPattern(pattern: String): AnnotationSpec? = null
 
