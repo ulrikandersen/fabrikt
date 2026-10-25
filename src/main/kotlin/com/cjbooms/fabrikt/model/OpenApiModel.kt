@@ -1,5 +1,6 @@
 package com.cjbooms.fabrikt.model
 
+import com.cjbooms.fabrikt.parser.OpenApi3ParserAdapter
 import com.fasterxml.jackson.databind.JsonNode
 import com.reprezen.jsonoverlay.Overlay
 import com.reprezen.kaizen.oasparser.model3.Discriminator
@@ -196,10 +197,14 @@ class OpenApiPath(
     internal val kaizen: Path,
     private val schemaSemanticsAt: (String) -> SchemaSemantics = { SchemaSemantics() },
 ) {
+    private val queryOperations: Map<String, OpenApiOperation> by lazy {
+        OpenApi3ParserAdapter.parseQueryOperations(kaizen).mapValues { OpenApiOperation(it.value, schemaSemanticsAt) }
+    }
+
     val parameters: List<OpenApiParameter>
         get() = kaizen.parameters?.map { OpenApiParameter(it, schemaSemanticsAt) } ?: emptyList()
     val operations: Map<String, OpenApiOperation>
-        get() = kaizen.operations?.mapValues { OpenApiOperation(it.value, schemaSemanticsAt) } ?: emptyMap()
+        get() = kaizen.operations.orEmpty().mapValues { OpenApiOperation(it.value, schemaSemanticsAt) } + queryOperations
     val pathString: String get() = kaizen.pathString
 
     override fun equals(other: Any?): Boolean = other is OpenApiPath && kaizen == other.kaizen
