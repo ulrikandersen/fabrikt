@@ -23,6 +23,48 @@ class SharedCompositionIntegrationTest {
     }
 
     @ParameterizedTest
+    @ValueSource(booleans = [false, true])
+    fun `composed properties retain distinct names across the allOf hierarchy`(contracts: Boolean) {
+        MutableSettings.updateSettings(
+            modelOptions = if (contracts) setOf(ModelCodeGenOptionType.SHARED_COMPOSITION_CONTRACTS) else emptySet(),
+        )
+        val files =
+            ModelGenerator(
+                Packages("example"),
+                SourceApi(readTextResource("/examples/normalizedNameConflation/api.yaml")),
+            ).generate().files.associate { it.name to it.toString() }
+
+        listOf("Grandparent", "Parent", "Child").forEach { name ->
+            assertThat(files.getValue(name)).contains("val `\$type`: String")
+        }
+        listOf("Parent", "Child").forEach { name ->
+            assertThat(files.getValue(name)).contains("val type: String? = null")
+            if (contracts) assertThat(files.getValue(name)).contains("GrandparentComposite", "ParentComposite")
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [false, true])
+    fun `sibling collisions leave unrelated composed property names unchanged`(contracts: Boolean) {
+        MutableSettings.updateSettings(
+            modelOptions = if (contracts) setOf(ModelCodeGenOptionType.SHARED_COMPOSITION_CONTRACTS) else emptySet(),
+        )
+        val files =
+            ModelGenerator(
+                Packages("example"),
+                SourceApi(readTextResource("/examples/sharedCompositionContracts/api.yaml")),
+            ).generate().files.associate { it.name to it.toString() }
+
+        listOf("BranchFirst", "BranchFirstChild").forEach { name ->
+            assertThat(files.getValue(name)).contains("val customField: String?").doesNotContain("val custom_field:")
+        }
+        assertThat(files.getValue("BranchSecond")).contains("val custom_field: String?", "val customField: String?")
+        if (contracts) {
+            assertThat(files.getValue("BranchFirstComposite")).contains("val customField: String?").doesNotContain("val custom_field:")
+        }
+    }
+
+    @ParameterizedTest
     @ValueSource(strings = ["3.0.4", "3.1.2", "3.2.0"])
     fun `contracts use the same resolved composition across supported specification versions`(version: String) {
         val spec = readTextResource("/examples/sharedCompositionContracts/api.yaml").replace("3.0.4", version)
