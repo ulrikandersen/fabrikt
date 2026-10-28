@@ -256,3 +256,37 @@ components:
           properties:
             payload:
               type: integer
+    # Three-level allOf hierarchy: the middle type is both a polymorphic subtype and a
+    # polymorphic supertype. All levels share the same discriminator property.
+    RootType:
+      type: object
+      discriminator:
+        propertyName: kind
+        mapping:
+          middle: '#/components/schemas/MiddleType'
+      required:
+        - kind
+        - rootField
+      properties:
+        kind:
+          type: string
+        rootField:
+          type: string
+    MiddleType:
+      allOf:
+        - $ref: '#/components/schemas/RootType'
+        - type: object
+          discriminator:
+            propertyName: kind
+            mapping:
+              leaf: '#/components/schemas/LeafType'
+          properties:
+            middleField:
+              type: string
+    LeafType:
+      allOf:
+        - $ref: '#/components/schemas/MiddleType'
+        - type: object
+          properties:
+            leafField:
+              type: string
